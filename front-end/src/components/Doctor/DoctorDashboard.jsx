@@ -1,6 +1,7 @@
 // src/components/DoctorDashboard.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import DoctorNavbar from "./DoctorNavbar";
 
 const initialAppointments = [
   {
@@ -43,27 +44,8 @@ const DoctorDashboard = () => {
 
   return (
     <div className="min-vh-100 bg-light">
-      {/* Top bar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-        <div className="container">
-          <span className="navbar-brand fw-bold text-primary">
-            E-MED Doctor Dashboard
-          </span>
-
-          <div className="ms-auto d-flex gap-2">
-            <button
-              className="btn btn-outline-primary me-2"
-              onClick={handleProfile}
-            >
-              Profile
-            </button>
-            <button className="btn btn-danger" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
-
+      <DoctorNavbar />
+      
       {/* Content */}
       <div className="container py-4">
         <h3 className="mb-3">Today&apos;s Appointments</h3>

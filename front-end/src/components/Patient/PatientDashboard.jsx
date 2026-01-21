@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import PatientNavbar from "./PatientNavbar";
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
@@ -83,95 +84,16 @@ const PatientDashboard = () => {
     },
   ];
 
-  const handleFeedbackClick = () => {
-    navigate("/patient/FeedbackPage");
-  };
-
-  const handleEditProfileClick = () => {
-    navigate("/patient/EditPatientProfile");
-  };
-
-  const handleViewHistoryClick = () => {
-    document
-      .getElementById("appointment-history")
-      .scrollIntoView({ behavior: "smooth" });
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
 
   return (
-    <div className="container-fluid p-3 min-vh-100 bg-light">
-      <nav className="navbar navbar-light bg-white border-bottom mb-3">
-        <div className="container-fluid">
-          <a className="navbar-brand fw-bold" href="#">
-            E-MED
-          </a>
-
-          <div className="d-flex">
-            <button
-              className="btn btn-outline-primary btn-sm me-2"
-              onClick={() =>
-                document
-                  .getElementById("doctor-list")
-                  .scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Doctors
-            </button>
-
-            <button
-              className="btn btn-outline-primary btn-sm me-2"
-              onClick={handleFeedbackClick}
-            >
-              Feedback
-            </button>
-
-            <div className="dropdown">
-              <button
-                className="btn btn-outline-secondary dropdown-toggle btn-sm"
-                type="button"
-                data-bs-toggle="dropdown"
-              >
-                Profile
-              </button>
-              <ul className="dropdown-menu">
-                <li>
-                  <button
-                    className="dropdown-item"
-                    onClick={handleEditProfileClick}
-                  >
-                    Edit Profile
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item"
-                    onClick={handleViewHistoryClick}
-                  >
-                    History
-                  </button>
-                </li>
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item text-danger"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="container">
+    <div className="min-vh-100 bg-light">
+      <PatientNavbar />
+      
+      <div className="container-fluid p-3">
         <div className="row g-4">
           <div className="col-lg-4">
             <div className="card h-100">

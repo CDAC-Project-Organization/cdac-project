@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import PatientNavbar from "./PatientNavbar";
 
 function FeedbackPage({ appointmentId }) {
   const [rating, setRating] = useState(5);
@@ -23,7 +24,10 @@ function FeedbackPage({ appointmentId }) {
   };
 
   return (
-    <div className="container py-5">
+    <div className="min-vh-100 bg-light">
+      <PatientNavbar />
+      
+      <div className="container py-5">
       <div className="row justify-content-center">
         <div className="col-12 col-sm-10 col-md-6 col-lg-4">
           <div className="card shadow-sm border-0">
@@ -75,6 +79,7 @@ function FeedbackPage({ appointmentId }) {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

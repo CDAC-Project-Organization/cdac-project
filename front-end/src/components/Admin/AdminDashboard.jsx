@@ -5,78 +5,19 @@ import {
   Row,
   Col,
   Card,
-  Navbar,
-  Nav,
   Button,
-  NavbarBrand,
 } from "react-bootstrap";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AdminNavbar from "./AdminNavbar";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ doctors: 5, patients: 5 });
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
   return (
     <div className="min-vh-100 bg-light">
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top">
-        <div className="container">
-          <NavbarBrand
-            className="navbar-brand fw-bold text-primary"
-            href="/admin"
-          >
-            E-MED Admin
-          </NavbarBrand>
-
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#adminNavbar"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          <div className="collapse navbar-collapse" id="adminNavbar">
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <a className="nav-link" href="/admin">
-                  Dashboard
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="/admin/doctorList">
-                  Doctors
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="/admin/patientList">
-                  Patients
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="/admin/addDoctor">
-                  Add Doctor
-                </a>
-              </li>
-            </ul>
-            <a
-              className="btn btn-outline-primary ms-lg-2"
-              href="/login"
-              onClick={handleLogout}
-            >
-              Logout
-            </a>
-          </div>
-        </div>
-      </nav>
-
+      <AdminNavbar />
+      
       <div style={{ paddingTop: "80px" }}></div>
 
       {/* Main Content */}
