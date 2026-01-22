@@ -1,14 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
+
+  // Initialize temporary users in localStorage if they don't exist
+  useEffect(() => {
+    if (!localStorage.getItem("tempUsers")) {
+      const tempUsers = [
+        {
+          id: "1",
+          email: "admin@123.com",
+          password: "123",
+          role: "admin",
+          name: "Admin User",
+          phone: "1234567890"
+        },
+        {
+          id: "2",
+          email: "patient@123.com",
+          password: "123",
+          role: "patient",
+          name: "John Patient",
+          phone: "9876543210",
+          address: "123 Main St",
+          dob: "1990-01-01"
+        },
+        {
+          id: "3",
+          email: "doctor@123.com",
+          password: "123",
+          role: "doctor",
+          name: "Dr. Smith",
+          phone: "5551234567",
+          specialization: "Cardiologist",
+          experience: "10 years"
+        }
+      ];
+      localStorage.setItem("tempUsers", JSON.stringify(tempUsers));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setLoginError(""); // Clear error when user types
   };
 
   const handleSubmit = (e) => {
@@ -16,24 +55,46 @@ const Login = () => {
     
     // Check if both fields have data
     if (!formData.email.trim() || !formData.password.trim()) {
-      alert("Please enter both email and password!");
+      setLoginError("Please enter both email and password!");
       return;
     }
 
     setIsSubmitting(true);
+    setLoginError("");
     
-    // Simulate login validation (replace with real API call later)
+    // Simulate API call delay
     setTimeout(() => {
-      console.log("Login data:", formData);
+      // Get all temp users from localStorage
+      const tempUsers = JSON.parse(localStorage.getItem("tempUsers")) || [];
       
-      // Store user data in localStorage for EditPatient page
-      localStorage.setItem("user", JSON.stringify({
-        user_id: "123", // dummy patient ID
-        email: formData.email
-      }));
+      // Find user with matching email and password
+      const user = tempUsers.find(
+        u => u.email === formData.email && u.password === formData.password
+      );
+      
+      if (user) {
+        // Store current user in localStorage (without password for security)
+        const { password, ...userWithoutPassword } = user;
+        localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
+        
+        // Store authentication token
+        localStorage.setItem("isAuthenticated", "true");
+        
+        console.log("Login successful:", userWithoutPassword);
+        
+        // Navigate based on role
+        if (user.role === "admin") {
+          navigate("/admin");
+        } else if (user.role === "patient") {
+          navigate("/patient");
+        } else if (user.role === "doctor") {
+          navigate("/doctor");
+        }
+      } else {
+        setLoginError("Invalid email or password!");
+      }
       
       setIsSubmitting(false);
-      navigate("/admin"); // Navigate only if data is entered
     }, 1000);
   };
 
@@ -48,6 +109,28 @@ const Login = () => {
                 <p className="text-center text-muted mb-4">
                   Sign in to manage your appointments.
                 </p>
+
+                {/* Login Error Alert */}
+                {loginError && (
+                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                    {loginError}
+                    <button 
+                      type="button" 
+                      className="btn-close" 
+                      onClick={() => setLoginError("")}
+                    ></button>
+                  </div>
+                )}
+
+                {/* Quick Login Instructions
+                <div className="alert alert-info mb-4">
+                  <small>
+                    <strong>Test Credentials:</strong><br/>
+                    Admin: admin@emed.com / admin123<br/>
+                    Patient: patient@emed.com / patient123<br/>
+                    Doctor: doctor@emed.com / doctor123
+                  </small>
+                </div> */}
 
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
@@ -119,6 +202,6 @@ const Login = () => {
       </div>
     </div>
   );
-};
+}; 
 
 export default Login;

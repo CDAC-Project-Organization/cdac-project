@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const PatientDashboard = () => {
@@ -130,13 +130,17 @@ const PatientDashboard = () => {
             </button>
 
             <div className="dropdown">
-              <button
-                className="btn btn-outline-secondary dropdown-toggle btn-sm"
-                type="button"
-                data-bs-toggle="dropdown"
-              >
-                Profile
-              </button>
+              <Link to="/patient/EditPatient">
+                <button 
+                  
+                  className="btn btn-outline-secondary  btn-sm"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                >
+                  Profile
+                </button>
+              </Link>
+
               <ul className="dropdown-menu">
                 <li>
                   <button
