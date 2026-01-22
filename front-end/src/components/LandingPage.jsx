@@ -32,7 +32,7 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      <section className="pt-5 mt-5" style={{ paddingTop: "100px", background: "#ecf0f1" }}>
+      <section className="pt-5 mt-5" style={{ paddingTop: "100px", paddingBottom:"50px", background: "#ecf0f1" }}>
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-6 mb-5 mb-lg-0">

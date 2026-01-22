@@ -13,6 +13,8 @@ import FeedbackPage from "./components/Patient/FeedbackPage";
 import DoctorEditProfile from "./components/Doctor/DoctorEditProfile";
 import PatientDashboard from "./components/Patient/PatientDashboard";
 import DoctorDashboard from "./components/Doctor/DoctorDashboard";
+import EditDoctor from "./components/Admin/EditDoctor";
+import Appointments from "./components/Admin/Appointments ";
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
         <Route path="/patient" element=<PatientDashboard /> />
         <Route path="/doctor/doctorEdit" element=<DoctorEditProfile /> />
         <Route path="/doctor" element=<DoctorDashboard /> />
+        <Route path="/admin/editDoctor/:id" element= <EditDoctor/> />
+        <Route path="/admin/appointments" element=<Appointments/> />
       </Routes>
     </>
   );

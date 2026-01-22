@@ -1,31 +1,47 @@
-// src/components/admin/AddDoctor.jsx
-import React, { useState } from 'react';
+// src/components/admin/EditDoctor.jsx
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Card } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const AddDoctor = () => {
+const EditDoctor = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
-    
+    const [loading, setLoading] = useState(true);
+    const [doctor, setDoctor] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        password: '',
-        phone: '',
         specialization: '',
-        clinic_name: '',
-        clinic_location: '',
-        consultation_fee: '',
-        qualification: '',
-        experience_years: ''
+        status: 'active',
+        phone: '',
+        experience: '',
+        consultation_fee: ''
     });
 
-    const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);
-
-    const specializations = [
-        'Cardiology', 'Dermatology', 'General Medicine', 'Neurology',
-        'Pediatrics', 'Orthopedics', 'Gynecology', 'ENT'
+    const dummyDoctors = [
+        { id: 1, name: 'Dr. John Smith', email: 'john.smith@emed.com', specialization: 'Cardiology', status: 'active', phone: '+1-555-0101', experience: '12 years', consultation_fee: '$150' },
+        { id: 2, name: 'Dr. Sarah Johnson', email: 'sarah.johnson@emed.com', specialization: 'Dermatology', status: 'active', phone: '+1-555-0102', experience: '8 years', consultation_fee: '$120' },
+        { id: 3, name: 'Dr. Michael Chen', email: 'michael.chen@emed.com', specialization: 'Neurology', status: 'active', phone: '+1-555-0103', experience: '15 years', consultation_fee: '$180' },
+        { id: 4, name: 'Dr. Emily Davis', email: 'emily.davis@emed.com', specialization: 'Pediatrics', status: 'pending', phone: '+1-555-0104', experience: '6 years', consultation_fee: '$100' },
+        { id: 5, name: 'Dr. Robert Wilson', email: 'robert.wilson@emed.com', specialization: 'Orthopedics', status: 'active', phone: '+1-555-0105', experience: '20 years', consultation_fee: '$200' },
     ];
+
+    useEffect(() => {
+        const foundDoctor = dummyDoctors.find(doc => doc.id === parseInt(id));
+        if (foundDoctor) {
+            setDoctor(foundDoctor);
+            setFormData({
+                name: foundDoctor.name,
+                email: foundDoctor.email,
+                specialization: foundDoctor.specialization,
+                status: foundDoctor.status,
+                phone: foundDoctor.phone,
+                experience: foundDoctor.experience,
+                consultation_fee: foundDoctor.consultation_fee
+            });
+        }
+        setLoading(false);
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -37,7 +53,7 @@ const AddDoctor = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        alert(`Doctor ${formData.name} added successfully!`);
+        alert(`Doctor ${formData.name} updated successfully!`);
         navigate('/admin/doctorList');
     };
 
@@ -46,6 +62,26 @@ const AddDoctor = () => {
         localStorage.removeItem("isAuthenticated");
         navigate("/login");
     };
+
+    if (loading) {
+        return (
+            <div className="text-center py-5">
+                <div className="spinner-border" style={{ color: '#48b575' }}></div>
+                <p className="mt-3 text-muted">Loading doctor details...</p>
+            </div>
+        );
+    }
+
+    if (!doctor) {
+        return (
+            <div className="text-center py-5">
+                <p className="text-muted">Doctor not found</p>
+                <Button onClick={() => navigate('/admin/doctorList')} variant="primary">
+                    Back to Doctors List
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
@@ -110,10 +146,16 @@ const AddDoctor = () => {
                 <div className="mb-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Add New Doctor</h2>
-                            <p className="text-muted mb-0">Fill in doctor details below</p>
+                            <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Edit Doctor</h2>
+                            <p className="text-muted mb-0">Update doctor information</p>
                         </div>
-                       
+                        <Button
+                            onClick={() => navigate('/admin/doctorList')}
+                            variant="outline-secondary"
+                            className="rounded-pill"
+                        >
+                            ← Back to Doctors
+                        </Button>
                     </div>
                 </div>
 
@@ -124,7 +166,7 @@ const AddDoctor = () => {
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Full Name *
+                                            Doctor Name
                                         </Form.Label>
                                         <Form.Control
                                             type="text"
@@ -137,7 +179,6 @@ const AddDoctor = () => {
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
-                                            placeholder="Dr. Full Name"
                                         />
                                     </Form.Group>
                                 </div>
@@ -145,7 +186,7 @@ const AddDoctor = () => {
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Email *
+                                            Email
                                         </Form.Label>
                                         <Form.Control
                                             type="email"
@@ -158,7 +199,6 @@ const AddDoctor = () => {
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
-                                            placeholder="doctor@example.com"
                                         />
                                     </Form.Group>
                                 </div>
@@ -166,30 +206,10 @@ const AddDoctor = () => {
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Phone *
+                                            Specialization
                                         </Form.Label>
                                         <Form.Control
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="9876543210"
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Specialization *
-                                        </Form.Label>
-                                        <Form.Select
+                                            type="text"
                                             name="specialization"
                                             value={formData.specialization}
                                             onChange={handleChange}
@@ -199,32 +219,6 @@ const AddDoctor = () => {
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
-                                        >
-                                            <option value="">Select Specialization</option>
-                                            {specializations.map(spec => (
-                                                <option key={spec} value={spec}>{spec}</option>
-                                            ))}
-                                        </Form.Select>
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Clinic Name *
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="clinic_name"
-                                            value={formData.clinic_name}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="ABC Hospital"
                                         />
                                     </Form.Group>
                                 </div>
@@ -232,10 +226,73 @@ const AddDoctor = () => {
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Consultation Fee *
+                                            Status
+                                        </Form.Label>
+                                        <Form.Select
+                                            name="status"
+                                            value={formData.status}
+                                            onChange={handleChange}
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="inactive">Inactive</option>
+                                        </Form.Select>
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Phone Number
                                         </Form.Label>
                                         <Form.Control
-                                            type="number"
+                                            type="text"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            required
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                        />
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Experience
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="experience"
+                                            value={formData.experience}
+                                            onChange={handleChange}
+                                            required
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            placeholder="e.g., 12 years"
+                                        />
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Consultation Fee
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="text"
                                             name="consultation_fee"
                                             value={formData.consultation_fee}
                                             onChange={handleChange}
@@ -245,90 +302,7 @@ const AddDoctor = () => {
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
-                                            placeholder="500"
-                                            min="0"
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Password *
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="Enter password"
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Qualification
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="qualification"
-                                            value={formData.qualification}
-                                            onChange={handleChange}
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="MBBS, MD, etc."
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Experience (Years)
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            name="experience_years"
-                                            value={formData.experience_years}
-                                            onChange={handleChange}
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="5"
-                                            min="0"
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Clinic Location
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="clinic_location"
-                                            value={formData.clinic_location}
-                                            onChange={handleChange}
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="City, Address"
+                                            placeholder="e.g., $150"
                                         />
                                     </Form.Group>
                                 </div>
@@ -344,7 +318,7 @@ const AddDoctor = () => {
                                         border: 'none'
                                     }}
                                 >
-                                    Add Doctor
+                                    Update Doctor
                                 </Button>
                                 <Button
                                     type="button"
@@ -363,4 +337,4 @@ const AddDoctor = () => {
     );
 };
 
-export default AddDoctor;
+export default EditDoctor;

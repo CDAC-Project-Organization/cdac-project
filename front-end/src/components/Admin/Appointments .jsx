@@ -1,33 +1,36 @@
+// src/components/admin/Appointments.jsx
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Form, InputGroup } from 'react-bootstrap';
+import { Table, Button, Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-const PatientList = () => {
+const Appointments = () => {
     const navigate = useNavigate();
-    const [patients, setPatients] = useState([]);
+    const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [search, setSearch] = useState('');
-    
-    const dummyPatients = [
-        { id: 1, name: 'Alice Johnson', email: 'alice@example.com', phone: '9876543210', gender: 'Female', age: 32, registration_date: '2024-01-20' },
-        { id: 2, name: 'Bob Williams', email: 'bob@example.com', phone: '9876543211', gender: 'Male', age: 45, registration_date: '2024-02-15' },
-        { id: 3, name: 'Carol Brown', email: 'carol@example.com', phone: '9876543212', gender: 'Female', age: 28, registration_date: '2024-03-10' },
-        { id: 4, name: 'David Miller', email: 'david@example.com', phone: '9876543213', gender: 'Male', age: 38, registration_date: '2024-01-25' },
-        { id: 5, name: 'Eva Garcia', email: 'eva@example.com', phone: '9876543214', gender: 'Female', age: 52, registration_date: '2024-02-28' },
+
+    const dummyAppointments = [
+        { id: 1, patientName: 'Alice Johnson', doctorName: 'Dr. John Smith', date: '2024-01-15', time: '10:00 AM', status: 'Scheduled', reason: 'Regular Checkup' },
+        { id: 2, patientName: 'Bob Williams', doctorName: 'Dr. Sarah Johnson', date: '2024-01-15', time: '11:30 AM', status: 'Completed', reason: 'Follow-up' },
+        { id: 3, patientName: 'Carol Brown', doctorName: 'Dr. Michael Chen', date: '2024-01-16', time: '02:00 PM', status: 'Scheduled', reason: 'Consultation' },
+        { id: 4, patientName: 'David Miller', doctorName: 'Dr. Emily Davis', date: '2024-01-16', time: '09:00 AM', status: 'Cancelled', reason: 'Emergency' },
+        { id: 5, patientName: 'Eva Garcia', doctorName: 'Dr. Robert Wilson', date: '2024-01-17', time: '03:30 PM', status: 'Scheduled', reason: 'Treatment' },
+        { id: 6, patientName: 'Frank Thomas', doctorName: 'Dr. John Smith', date: '2024-01-17', time: '04:00 PM', status: 'Completed', reason: 'Routine Check' },
+        { id: 7, patientName: 'Grace Lee', doctorName: 'Dr. Sarah Johnson', date: '2024-01-18', time: '10:30 AM', status: 'Scheduled', reason: 'Consultation' },
+        { id: 8, patientName: 'Henry Clark', doctorName: 'Dr. Michael Chen', date: '2024-01-18', time: '01:00 PM', status: 'Completed', reason: 'Review' },
     ];
 
     useEffect(() => {
-        setPatients(dummyPatients);
+        setLoading(true);
+        setTimeout(() => {
+            setAppointments(dummyAppointments);
+            setLoading(false);
+        }, 500);
     }, []);
 
-    const handleEdit = (patientId, patientName) => {
-        // alert(`Edit patient: ${patientName} (ID: ${patientId})`);
-        navigate(`/admin/editPatient/${patientId}`);
-    };
-
-    const handleDelete = (patientId, patientName) => {
-        if (window.confirm(`Delete patient: ${patientName}?`)) {
-            setPatients(patients.filter(p => p.id !== patientId));
+    const handleDelete = (appointmentId, patientName) => {
+        if (window.confirm(`Are you sure you want to delete appointment for ${patientName}?`)) {
+            setAppointments(appointments.filter(app => app.id !== appointmentId));
+            alert(`Appointment for ${patientName} has been deleted.`);
         }
     };
 
@@ -37,11 +40,14 @@ const PatientList = () => {
         navigate("/login");
     };
 
-    const filteredPatients = patients.filter(patient =>
-        patient.name.toLowerCase().includes(search.toLowerCase()) ||
-        patient.email.toLowerCase().includes(search.toLowerCase()) ||
-        patient.phone.includes(search)
-    );
+    const getStatusBadge = (status) => {
+        switch(status) {
+            case 'Scheduled': return <Badge bg="primary">Scheduled</Badge>;
+            case 'Completed': return <Badge bg="success">Completed</Badge>;
+            case 'Cancelled': return <Badge bg="danger">Cancelled</Badge>;
+            default: return <Badge bg="secondary">Pending</Badge>;
+        }
+    };
 
     return (
         <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
@@ -107,12 +113,10 @@ const PatientList = () => {
                 <div className="mb-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Patient Management</h2>
-                            <p className="text-muted mb-0">View and manage all registered patients</p>
+                            <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Appointments Management</h2>
+                            <p className="text-muted mb-0">View and manage all patient appointments</p>
                         </div>
-                        <div className="d-flex gap-2">
-                           
-                        </div>
+                       
                     </div>
                 </div>
 
@@ -121,90 +125,91 @@ const PatientList = () => {
                     <Card.Body className="p-4">
                         <div className="d-flex justify-content-between align-items-center">
                             <div>
-                                <h5 className="fw-bold mb-1" style={{ color: '#2c3e50' }}>Total Patients</h5>
-                                <h3 className="mb-0" style={{ color: '#48b575' }}>{patients.length}</h3>
+                                <h5 className="fw-bold mb-1" style={{ color: '#2c3e50' }}>Total Appointments</h5>
+                                <h3 className="mb-0" style={{ color: '#48b575' }}>{appointments.length}</h3>
                             </div>
-                            <div style={{ width: '300px' }}>
-                                <InputGroup>
-                                    <InputGroup.Text style={{ backgroundColor: '#ffffff', border: '1px solid #e9ecef' }}>
-                                        🔍
-                                    </InputGroup.Text>
-                                    <Form.Control
-                                        placeholder="Search patients..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                    {search && (
-                                        <Button 
-                                            variant="outline-secondary"
-                                            onClick={() => setSearch('')}
-                                        >
-                                            Clear
-                                        </Button>
-                                    )}
-                                </InputGroup>
+                            <div className="d-flex gap-3">
+                                <div className="text-center">
+                                    <div className="fw-bold" style={{ color: '#48b575' }}>
+                                        {appointments.filter(a => a.status === 'Scheduled').length}
+                                    </div>
+                                    <small className="text-muted">Scheduled</small>
+                                </div>
+                                <div className="text-center">
+                                    <div className="fw-bold" style={{ color: '#28a745' }}>
+                                        {appointments.filter(a => a.status === 'Completed').length}
+                                    </div>
+                                    <small className="text-muted">Completed</small>
+                                </div>
+                                <div className="text-center">
+                                    <div className="fw-bold" style={{ color: '#dc3545' }}>
+                                        {appointments.filter(a => a.status === 'Cancelled').length}
+                                    </div>
+                                    <small className="text-muted">Cancelled</small>
+                                </div>
                             </div>
                         </div>
                     </Card.Body>
                 </Card>
 
-                {/* Patients Table */}
+                {/* Appointments Table */}
                 <Card className="shadow-sm border-0" style={{ borderRadius: '16px' }}>
                     <Card.Header className="bg-white d-flex justify-content-between align-items-center">
-                        <h5 className="fw-bold mb-0" style={{ color: '#2c3e50' }}>Patients List</h5>
+                        <h5 className="fw-bold mb-0" style={{ color: '#2c3e50' }}>All Appointments</h5>
                         <small className="text-muted">
-                            {filteredPatients.length} of {patients.length} patients shown
+                            Showing {appointments.length} appointments
                         </small>
                     </Card.Header>
                     <Card.Body className="p-4">
-                        {filteredPatients.length === 0 ? (
+                        {loading ? (
                             <div className="text-center py-5">
-                                <p className="text-muted">No patients found matching "{search}"</p>
-                                {search && (
-                                    <Button 
-                                        variant="outline-secondary" 
-                                        onClick={() => setSearch('')}
-                                    >
-                                        Clear Search
-                                    </Button>
-                                )}
+                                <div className="spinner-border" style={{ color: '#48b575' }}></div>
+                                <p className="mt-3 text-muted">Loading appointments...</p>
+                            </div>
+                        ) : appointments.length === 0 ? (
+                            <div className="text-center py-5">
+                                <p className="text-muted">No appointments found</p>
                             </div>
                         ) : (
                             <div className="table-responsive">
                                 <Table hover className="align-middle mb-0">
                                     <thead className="table-light">
                                         <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Contact</th>
-                                            <th>Details</th>
+                                            <th>#</th>
+                                            <th>Patient Name</th>
+                                            <th>Doctor</th>
+                                            <th>Date & Time</th>
+                                            <th>Status</th>
+                                            <th>Reason</th>
                                             <th className="text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredPatients.map(patient => (
-                                            <tr key={patient.id}>
-                                                <td>#{patient.id}</td>
+                                        {appointments.map(appointment => (
+                                            <tr key={appointment.id}>
+                                                <td>#{appointment.id}</td>
                                                 <td>
-                                                    <div className="fw-semibold">{patient.name}</div>
-                                                    <small className="text-muted">{patient.gender}, {patient.age}y</small>
+                                                    <div className="fw-semibold">{appointment.patientName}</div>
                                                 </td>
                                                 <td>
-                                                    <div className="text-muted">{patient.email}</div>
-                                                    <small>{patient.phone}</small>
+                                                    <div className="text-muted">{appointment.doctorName}</div>
                                                 </td>
                                                 <td>
-                                                    <small>
-                                                        Joined: {new Date(patient.registration_date).toLocaleDateString()}
-                                                    </small>
+                                                    <div className="fw-semibold">{appointment.date}</div>
+                                                    <small className="text-muted">{appointment.time}</small>
+                                                </td>
+                                                <td>
+                                                    {getStatusBadge(appointment.status)}
+                                                </td>
+                                                <td>
+                                                    <small>{appointment.reason}</small>
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-2 justify-content-center">
-                                                    
                                                         <Button 
                                                             size="sm" 
                                                             variant="outline-danger"
-                                                            onClick={() => handleDelete(patient.id, patient.name)}
+                                                            onClick={() => handleDelete(appointment.id, appointment.patientName)}
                                                             className="rounded-pill"
                                                         >
                                                             Delete
@@ -224,4 +229,4 @@ const PatientList = () => {
     );
 };
 
-export default PatientList;
+export default Appointments;

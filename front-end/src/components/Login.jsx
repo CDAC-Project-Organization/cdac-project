@@ -13,22 +13,22 @@ const Login = () => {
       const tempUsers = [
         {
           id: "1",
-          email: "admin@example.com",
-          password: "admin123",
+          email: "admin@123.com",
+          password: "123",
           role: "admin",
           name: "Admin User"
         },
         {
           id: "2",
-          email: "patient@example.com",
-          password: "patient123",
+          email: "patient@123.com",
+          password: "123",
           role: "patient",
           name: "John Patient"
         },
         {
           id: "3",
-          email: "doctor@example.com",
-          password: "doctor123",
+          email: "doctor@123.com",
+          password: "123",
           role: "doctor",
           name: "Dr. Smith"
         }
@@ -81,119 +81,153 @@ const Login = () => {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center" style={{ 
-      backgroundColor: "#f5f7fa"
-    }}>
-      <div className="container">
+    <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+      {/* Navbar */}
+      <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
+        <div className="container">
+          <a className="navbar-brand fw-bold fs-4" href="/" style={{ color: "#ffffff" }}>
+            E-MED
+          </a>
+
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <a className="nav-link fw-medium" href="/" style={{ color: "#e8f5e9" }}>
+                  Home
+                </a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link fw-medium" href="/login" style={{ color: "#e8f5e9" }}>
+                  Login
+                </a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link fw-medium" href="/signup" style={{ color: "#e8f5e9" }}>
+                  Sign Up
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <div style={{ paddingTop: "80px" }}></div>
+
+      <div className="container py-5">
         <div className="row justify-content-center">
-          <div className="col-md-5">
-            <div className="card shadow-sm border-0">
-              <div className="card-body p-5">
-                <div className="text-center mb-4">
-                  <h2 className="fw-bold mb-3" style={{ color: "#2c3e50" }}>
-                    E-MED Login
-                  </h2>
-                  <p className="text-muted mb-0">
-                    Sign in to access your account
-                  </p>
+          <div className="col-lg-5">
+            <div className="mb-4 text-center">
+              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Login to E-MED</h2>
+              <p className="text-muted mb-0">Sign in to access your account</p>
+            </div>
+
+            <div className="shadow-sm border-0 p-4 rounded-3" style={{ backgroundColor: "white" }}>
+              {loginError && (
+                <div className="alert alert-danger rounded-3 mb-4">
+                  <div className="d-flex align-items-center">
+                    <span style={{ fontSize: "1.2rem", marginRight: "8px" }}>⚠️</span>
+                    <span>{loginError}</span>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                  <label htmlFor="email" className="form-label fw-medium" style={{ color: '#2c3e50' }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      padding: '10px',
+                      border: '1px solid #e9ecef',
+                      borderRadius: '8px'
+                    }}
+                  />
                 </div>
 
-                {loginError && (
-                  <div className="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {loginError}
-                    <button 
-                      type="button" 
-                      className="btn-close" 
-                      onClick={() => setLoginError("")}
-                    ></button>
-                  </div>
-                )}
+                <div className="mb-4">
+                  <label htmlFor="password" className="form-label fw-medium" style={{ color: '#2c3e50' }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      padding: '10px',
+                      border: '1px solid #e9ecef',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </div>
 
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-4">
-                    <label htmlFor="email" className="form-label fw-medium">
-                      Email Address
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <i className="bi bi-envelope"></i>
-                      </span>
-                      <input
-                        type="email"
-                        className="form-control"
-                        id="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  </div>
+                <div className="d-grid mb-4">
+                  <button
+                    type="submit"
+                    className="btn py-2 fw-medium"
+                    disabled={isSubmitting}
+                    style={{
+                      backgroundColor: '#48b575',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Signing in...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
+                  </button>
+                </div>
 
-                  <div className="mb-4">
-                    <label htmlFor="password" className="form-label fw-medium">
-                      Password
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <i className="bi bi-lock"></i>
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="password"
-                        name="password"
-                        placeholder="Enter your password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="d-grid mb-4">
-                    <button
-                      type="submit"
-                      className="btn btn-primary btn-lg fw-medium"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Signing in...
-                        </>
-                      ) : (
-                        <>
-                          <i className="bi bi-box-arrow-in-right me-2"></i>
-                          Login
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="text-center mb-4">
-                    <small className="text-muted">
-                      Don't have an account?{" "}
-                      <Link to="/signup" className="text-decoration-none fw-medium">
-                        Sign up
-                      </Link>
-                    </small>
-                  </div>
-
-                  <div className="text-center">
-                    <Link to="/" className="text-decoration-none d-inline-flex align-items-center">
-                      <i className="bi bi-arrow-left me-2"></i>
-                      Back to Home
+                <div className="text-center mb-3">
+                  <small className="text-muted">
+                    Don't have an account?{' '}
+                    <Link to="/signup" className="fw-medium" style={{ color: '#48b575' }}>
+                      Sign up
                     </Link>
-                  </div>
-                </form>
-              </div>
+                  </small>
+                </div>
+
+              
+
+                {/* <div className="text-center">
+                  <Link to="/" className="fw-medium" style={{ color: '#48b575' }}>
+                    ← Back to Home
+                  </Link>
+                </div> */}
+              </form>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      {/* <footer className="py-4 mt-5" style={{ backgroundColor: "#34495e", color: "#ecf0f1" }}>
+        <div className="container text-center">
+          <small style={{ color: "#95a5a6" }}>
+            © 2024 E-MED Healthcare. All rights reserved.
+          </small>
+        </div>
+      </footer> */}
     </div>
   );
 };
