@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -7,37 +7,30 @@ const Login = () => {
   const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
 
-  // Initialize temporary users in localStorage if they don't exist
+  // Initialize temporary users
   useEffect(() => {
     if (!localStorage.getItem("tempUsers")) {
       const tempUsers = [
         {
           id: "1",
-          email: "admin@123.com",
-          password: "123",
+          email: "admin@example.com",
+          password: "admin123",
           role: "admin",
-          name: "Admin User",
-          phone: "1234567890"
+          name: "Admin User"
         },
         {
           id: "2",
-          email: "patient@123.com",
-          password: "123",
+          email: "patient@example.com",
+          password: "patient123",
           role: "patient",
-          name: "John Patient",
-          phone: "9876543210",
-          address: "123 Main St",
-          dob: "1990-01-01"
+          name: "John Patient"
         },
         {
           id: "3",
-          email: "doctor@123.com",
-          password: "123",
+          email: "doctor@example.com",
+          password: "doctor123",
           role: "doctor",
-          name: "Dr. Smith",
-          phone: "5551234567",
-          specialization: "Cardiologist",
-          experience: "10 years"
+          name: "Dr. Smith"
         }
       ];
       localStorage.setItem("tempUsers", JSON.stringify(tempUsers));
@@ -47,42 +40,31 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setLoginError(""); // Clear error when user types
+    setLoginError("");
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Check if both fields have data
     if (!formData.email.trim() || !formData.password.trim()) {
-      setLoginError("Please enter both email and password!");
+      setLoginError("Please enter both email and password");
       return;
     }
 
     setIsSubmitting(true);
     setLoginError("");
     
-    // Simulate API call delay
     setTimeout(() => {
-      // Get all temp users from localStorage
       const tempUsers = JSON.parse(localStorage.getItem("tempUsers")) || [];
-      
-      // Find user with matching email and password
       const user = tempUsers.find(
         u => u.email === formData.email && u.password === formData.password
       );
       
       if (user) {
-        // Store current user in localStorage (without password for security)
         const { password, ...userWithoutPassword } = user;
         localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
-        
-        // Store authentication token
         localStorage.setItem("isAuthenticated", "true");
         
-        console.log("Login successful:", userWithoutPassword);
-        
-        // Navigate based on role
         if (user.role === "admin") {
           navigate("/admin");
         } else if (user.role === "patient") {
@@ -91,28 +73,34 @@ const Login = () => {
           navigate("/doctor");
         }
       } else {
-        setLoginError("Invalid email or password!");
+        setLoginError("Invalid email or password");
       }
       
       setIsSubmitting(false);
-    }, 1000);
+    }, 800);
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center bg-light">
+    <div className="min-vh-100 d-flex align-items-center" style={{ 
+      backgroundColor: "#f5f7fa"
+    }}>
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-md-5">
-            <div className="card shadow-sm">
-              <div className="card-body p-4">
-                <h3 className="card-title text-center mb-3">E-MED Login</h3>
-                <p className="text-center text-muted mb-4">
-                  Sign in to manage your appointments.
-                </p>
+            <div className="card shadow-sm border-0">
+              <div className="card-body p-5">
+                <div className="text-center mb-4">
+                  <h2 className="fw-bold mb-3" style={{ color: "#2c3e50" }}>
+                    E-MED Login
+                  </h2>
+                  <p className="text-muted mb-0">
+                    Sign in to access your account
+                  </p>
+                </div>
 
-                {/* Login Error Alert */}
                 {loginError && (
-                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                  <div className="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
                     {loginError}
                     <button 
                       type="button" 
@@ -122,86 +110,92 @@ const Login = () => {
                   </div>
                 )}
 
-                {/* Quick Login Instructions
-                <div className="alert alert-info mb-4">
-                  <small>
-                    <strong>Test Credentials:</strong><br/>
-                    Admin: admin@emed.com / admin123<br/>
-                    Patient: patient@emed.com / patient123<br/>
-                    Doctor: doctor@emed.com / doctor123
-                  </small>
-                </div> */}
-
                 <form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
-                      Email address
+                  <div className="mb-4">
+                    <label htmlFor="email" className="form-label fw-medium">
+                      Email Address
                     </label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="email"
-                      name="email"
-                      placeholder="name@example.com"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
+                    <div className="input-group">
+                      <span className="input-group-text">
+                        <i className="bi bi-envelope"></i>
+                      </span>
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
                   </div>
 
-                  <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
+                  <div className="mb-4">
+                    <label htmlFor="password" className="form-label fw-medium">
                       Password
                     </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      name="password"
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                    />
+                    <div className="input-group">
+                      <span className="input-group-text">
+                        <i className="bi bi-lock"></i>
+                      </span>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100 mb-2"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2"></span>
-                        Signing in...
-                      </>
-                    ) : (
-                      "Login"
-                    )}
-                  </button>
+                  <div className="d-grid mb-4">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-lg fw-medium"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Signing in...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-box-arrow-in-right me-2"></i>
+                          Login
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="text-center mb-4">
+                    <small className="text-muted">
+                      Don't have an account?{" "}
+                      <Link to="/signup" className="text-decoration-none fw-medium">
+                        Sign up
+                      </Link>
+                    </small>
+                  </div>
 
                   <div className="text-center">
-                    <small className="text-muted">
-                      New to E-MED?{" "}
-                      <a href="/signup" className="text-primary">
-                        Create an account
-                      </a>
-                    </small>
+                    <Link to="/" className="text-decoration-none d-inline-flex align-items-center">
+                      <i className="bi bi-arrow-left me-2"></i>
+                      Back to Home
+                    </Link>
                   </div>
                 </form>
               </div>
             </div>
-
-            <p className="text-center text-muted mt-3 mb-0">
-              <a href="/" className="text-decoration-none">
-                ← Back to Home
-              </a>
-            </p>
           </div>
         </div>
       </div>
     </div>
   );
-}; 
+};
 
 export default Login;
