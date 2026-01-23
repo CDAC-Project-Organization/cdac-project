@@ -16,6 +16,7 @@ import DoctorDashboard from "./components/Doctor/DoctorDashboard";
 import EditDoctor from "./components/Admin/EditDoctor";
 import Appointments from "./components/Admin/Appointments ";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorPage from "./components/ErrorPage";
 
 function App() {
   return (
@@ -80,6 +81,9 @@ function App() {
             <DoctorEditProfile />
           </ProtectedRoute>
         } />
+        
+        {/* Catch-all route for undefined paths */}
+        <Route path="*" element={<ErrorPage />} />
       </Routes>
     </>
   );
