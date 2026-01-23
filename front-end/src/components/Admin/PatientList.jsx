@@ -25,11 +25,11 @@ const PatientList = () => {
         navigate(`/admin/editPatient/${patientId}`);
     };
 
-    const handleDelete = (patientId, patientName) => {
-        if (window.confirm(`Delete patient: ${patientName}?`)) {
-            setPatients(patients.filter(p => p.id !== patientId));
-        }
-    };
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Delete patient: ${name}?`)) {
+      setPatients(patients.filter((p) => p.id !== id));
+    }
+  };
 
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
@@ -37,11 +37,12 @@ const PatientList = () => {
         navigate("/login");
     };
 
-    const filteredPatients = patients.filter(patient =>
-        patient.name.toLowerCase().includes(search.toLowerCase()) ||
-        patient.email.toLowerCase().includes(search.toLowerCase()) ||
-        patient.phone.includes(search)
-    );
+  const filteredPatients = patients.filter(
+    (patient) =>
+      patient.name.toLowerCase().includes(search.toLowerCase()) ||
+      patient.email.toLowerCase().includes(search.toLowerCase()) ||
+      patient.phone.includes(search),
+  );
 
     return (
         <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>

@@ -253,6 +253,7 @@ function EditPatient() {
       </div>
       </div>
     </div>
+  </div>
   );
 }
 

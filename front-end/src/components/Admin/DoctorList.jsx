@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Badge, Card, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import AdminNavbar from './AdminNavbar';
 
 const DoctorList = () => {
     const navigate = useNavigate();
@@ -266,6 +267,7 @@ const DoctorList = () => {
                     </Card.Body>
                 </Card>
             </div>
+        </div>
         </div>
     );
 };

@@ -5,12 +5,10 @@ import {
   Row,
   Col,
   Card,
-  Navbar,
-  Nav,
   Button,
-  NavbarBrand,
 } from "react-bootstrap";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AdminNavbar from "./AdminNavbar";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
