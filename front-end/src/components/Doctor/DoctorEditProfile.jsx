@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import DoctorNavbar from './DoctorNavbar';
 
 const DoctorEditProfile = () => {
   const navigate = useNavigate();
@@ -97,19 +98,15 @@ const DoctorEditProfile = () => {
   };
 
   return (
-    <Container className="py-4">
-      <div className="mb-4">
-        <Button
-          variant="outline-secondary"
-          onClick={() => navigate(-1)}
-          className="mb-3"
-        >
-          ← Back
-        </Button>
-
-        <h2>Edit Doctor Profile</h2>
-        <p className="text-muted">Update your professional information</p>
-      </div>
+    <div className="min-vh-100 bg-light">
+      <DoctorNavbar />
+      <div style={{ paddingTop: "80px" }}></div>
+      
+      <Container className="py-4">
+        <div className="mb-4">
+          <h2>Edit Doctor Profile</h2>
+          <p className="text-muted">Update your professional information</p>
+        </div>
 
       {success && (
         <Alert variant="success" dismissible onClose={() => setSuccess("")}>
@@ -234,8 +231,9 @@ const DoctorEditProfile = () => {
           </Form>
         </Card.Body>
       </Card>
-    </Container>
-  );
-};
+      </Container>
+      </div>
+    );
+  };
 
 export default DoctorEditProfile;

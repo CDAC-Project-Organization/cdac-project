@@ -1,28 +1,43 @@
 // src/components/DoctorDashboard.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import DoctorNavbar from './DoctorNavbar';
 
 const initialAppointments = [
   {
     id: 1,
     patientName: "Rohan Patil",
     time: "10:00 AM",
-    reason: "Follow-up for blood pressure",
+    date: "2024-01-23",
     status: "Confirmed",
   },
   {
     id: 2,
     patientName: "Sneha Gupta",
     time: "10:45 AM",
-    reason: "Skin allergy checkup",
+    date: "2024-01-23",
     status: "Pending",
   },
   {
     id: 3,
     patientName: "Aman Verma",
     time: "11:30 AM",
-    reason: "New consultation - fever",
+    date: "2024-01-24",
     status: "Confirmed",
+  },
+  {
+    id: 4,
+    patientName: "Priya Sharma",
+    time: "2:00 PM",
+    date: "2024-01-24",
+    status: "Confirmed",
+  },
+  {
+    id: 5,
+    patientName: "Amit Kumar",
+    time: "3:30 PM",
+    date: "2024-01-25",
+    status: "Pending",
   },
 ];
 
@@ -43,27 +58,9 @@ const DoctorDashboard = () => {
 
   return (
     <div className="min-vh-100 bg-light">
-      {/* Top bar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-        <div className="container">
-          <span className="navbar-brand fw-bold text-primary">
-            E-MED Doctor Dashboard
-          </span>
-
-          <div className="ms-auto d-flex gap-2">
-            <button
-              className="btn btn-outline-primary me-2"
-              onClick={handleProfile}
-            >
-              Profile
-            </button>
-            <button className="btn btn-danger" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
-
+      <DoctorNavbar />
+      <div style={{ paddingTop: "80px" }}></div>
+      
       {/* Content */}
       <div className="container py-4">
         <h3 className="mb-3">Today&apos;s Appointments</h3>
@@ -78,9 +75,8 @@ const DoctorDashboard = () => {
                 <th>#</th>
                 <th>Patient</th>
                 <th>Time</th>
-                <th>Reason</th>
+                <th>Date</th>
                 <th>Status</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -89,7 +85,7 @@ const DoctorDashboard = () => {
                   <td>{index + 1}</td>
                   <td>{appt.patientName}</td>
                   <td>{appt.time}</td>
-                  <td>{appt.reason}</td>
+                  <td>{appt.date}</td>
                   <td>
                     <span
                       className={
@@ -102,17 +98,12 @@ const DoctorDashboard = () => {
                       {appt.status}
                     </span>
                   </td>
-                  <td>
-                    <button className="btn btn-sm btn-outline-primary">
-                      View Details
-                    </button>
-                  </td>
                 </tr>
               ))}
 
               {appointments.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-muted">
+                  <td colSpan="5" className="text-center py-4 text-muted">
                     No appointments booked for today.
                   </td>
                 </tr>

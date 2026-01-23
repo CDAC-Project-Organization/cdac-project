@@ -15,6 +15,7 @@ import PatientDashboard from "./components/Patient/PatientDashboard";
 import DoctorDashboard from "./components/Doctor/DoctorDashboard";
 import EditDoctor from "./components/Admin/EditDoctor";
 import Appointments from "./components/Admin/Appointments ";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -24,17 +25,61 @@ function App() {
         <Route path="/login" element=<Login /> />
         <Route path="/doctors" element=<ShowDoctors /> />
         <Route path="/signup" element=<Registration /> />
-        <Route path="/admin" element=<AdminDashboard /> />
-        <Route path="/admin/doctorList" element=<DoctorList /> />
-        <Route path="/admin/patientList" element=<PatientList /> />
-        <Route path="/admin/addDoctor" element=<AddDoctor /> />
-        <Route path="/patient/EditPatient" element=<EditPatient /> />
-        <Route path="/patient/FeedbackPage" element=<FeedbackPage /> />
-        <Route path="/patient" element=<PatientDashboard /> />
-        <Route path="/doctor/doctorEdit" element=<DoctorEditProfile /> />
-        <Route path="/doctor" element=<DoctorDashboard /> />
-        <Route path="/admin/editDoctor/:id" element= <EditDoctor/> />
-        <Route path="/admin/appointments" element=<Appointments/> />
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/doctorList" element={
+          <ProtectedRoute requiredRole="admin">
+            <DoctorList />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/patientList" element={
+          <ProtectedRoute requiredRole="admin">
+            <PatientList />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/addDoctor" element={
+          <ProtectedRoute requiredRole="admin">
+            <AddDoctor />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/editDoctor/:id" element={
+          <ProtectedRoute requiredRole="admin">
+            <EditDoctor />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/appointments" element={
+          <ProtectedRoute requiredRole="admin">
+            <Appointments />
+          </ProtectedRoute>
+        } />
+        <Route path="/patient" element={
+          <ProtectedRoute requiredRole="patient">
+            <PatientDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/patient/EditPatient" element={
+          <ProtectedRoute requiredRole="patient">
+            <EditPatient />
+          </ProtectedRoute>
+        } />
+        <Route path="/patient/FeedbackPage" element={
+          <ProtectedRoute requiredRole="patient">
+            <FeedbackPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/doctor" element={
+          <ProtectedRoute requiredRole="doctor">
+            <DoctorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/doctor/doctorEdit" element={
+          <ProtectedRoute requiredRole="doctor">
+            <DoctorEditProfile />
+          </ProtectedRoute>
+        } />
       </Routes>
     </>
   );
