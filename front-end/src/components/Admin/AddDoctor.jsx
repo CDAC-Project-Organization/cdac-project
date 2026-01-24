@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import AdminNavbar from './AdminNavbar';
 
 const AddDoctor = () => {
     const navigate = useNavigate();
@@ -119,17 +120,13 @@ const AddDoctor = () => {
     };
 
     return (
-        <Container className="py-4">
+        <div className="min-vh-100 bg-light">
+            <AdminNavbar />
+            <div style={{ paddingTop: "80px" }}></div>
+            
+            <Container className="py-4">
             {/* Header */}
             <div className="mb-4">
-                <Button 
-                    variant="outline-secondary" 
-                    className="mb-3"
-                    onClick={() => navigate('/admin')}
-                >
-                    ← Back to Dashboard
-                </Button>
-                
                 <h2 className=''>Add New Doctor</h2>
                 <p className="text-muted">Fill in doctor details below</p>
             </div>
@@ -327,6 +324,7 @@ const AddDoctor = () => {
                 </Card.Body>
             </Card>
         </Container>
+        </div>
     );
 };
 

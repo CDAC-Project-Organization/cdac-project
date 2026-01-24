@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Badge, Card, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import AdminNavbar from './AdminNavbar';
 
 const DoctorList = () => {
     const navigate = useNavigate();
@@ -68,16 +69,12 @@ const DoctorList = () => {
     };
 
     return (
-        <div className="p-4">
+        <div className="min-vh-100 bg-light">
+            <AdminNavbar />
+            <div style={{ paddingTop: "80px" }}></div>
             
-            <div className="mb-4">
-                <Button 
-                    variant="outline-secondary" 
-                    onClick={() => navigate('/admin')}
-                    className="mb-3"
-                >
-                    ← Back to Dashboard
-                </Button>
+            <div className="p-4">
+                <div className="mb-4">
                 
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <div>
@@ -236,9 +233,8 @@ const DoctorList = () => {
                         </div>
                     )}
                 </Card.Body>
-                
-                
             </Card>
+        </div>
         </div>
     );
 };

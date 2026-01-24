@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PatientNavbar from "./PatientNavbar";
 
 function EditPatient() {
   const [formData, setFormData] = useState({
@@ -60,7 +61,10 @@ function EditPatient() {
   };
 
   return (
-    <div className="container py-4">
+    <div className="min-vh-100 bg-light">
+      <PatientNavbar />
+      
+      <div className="container py-4">
       {/* Page Header */}
       <div className="row mb-4 align-items-center">
         <div className="col">
@@ -248,6 +252,7 @@ function EditPatient() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
 
