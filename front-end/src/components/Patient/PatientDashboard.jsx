@@ -1,38 +1,36 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+<<<<<<< HEAD
 import "bootstrap/dist/css/bootstrap.min.css";
 import PatientNavbar from "./PatientNavbar";
+=======
+>>>>>>> ketan
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
-
-  const [patientData, setPatientData] = useState({
-    name: "Rahul Sharma",
-    email: "rahul.sharma@gmail.com",
-    phone: "9876543210",
-    age: 32,
-    bloodType: "B+",
-  });
-
-  const upcomingAppointments = [
+  const [selectedSpecialization, setSelectedSpecialization] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [appointments, setAppointments] = useState([
     {
       id: 1,
       doctorName: "Dr. Priya Patel",
-      specialty: "Cardiology",
-      date: "Tomorrow",
-      time: "10:30 AM",
-      type: "Checkup",
+      specialization: "Cardiology",
+      date: "2024-01-20",
+      time: "10:00 AM",
+      status: "Confirmed"
     },
     {
       id: 2,
       doctorName: "Dr. Amit Kumar",
-      specialty: "Dentistry",
-      date: "Mar 15",
-      time: "2:00 PM",
-      type: "Cleaning",
-    },
-  ];
+      specialization: "Dentistry",
+      date: "2024-01-18",
+      time: "11:00 AM",
+      status: "Completed"
+    }
+  ]);
 
+<<<<<<< HEAD
   const appointmentHistory = [
     {
       id: 1,
@@ -83,13 +81,88 @@ const PatientDashboard = () => {
       availability: "Wed, Thu",
     },
   ];
+=======
+  const specializations = ["Cardiology", "Dentistry", "General Physician"];
+  
+  const doctorsBySpecialization = {
+    "Cardiology": [
+      {
+        id: 1,
+        name: "Dr. Priya Patel",
+        specialty: "Cardiologist",
+        todaySlots: ["10:00 AM", "2:00 PM", "4:30 PM"]
+      }
+    ],
+    "Dentistry": [
+      {
+        id: 2,
+        name: "Dr. Amit Kumar",
+        specialty: "Dentist",
+        todaySlots: ["9:00 AM", "11:00 AM", "3:00 PM"]
+      }
+    ],
+    "General Physician": [
+      {
+        id: 3,
+        name: "Dr. Neha Singh",
+        specialty: "General Physician",
+        todaySlots: ["10:30 AM", "1:00 PM", "5:00 PM"]
+      }
+    ]
+  };
+
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  const formattedDateForDB = new Date().toISOString().split('T')[0];
+>>>>>>> ketan
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("isAuthenticated");
     navigate("/login");
   };
 
+  const handleSlotSelect = (doctor, slot) => {
+    setSelectedDoctor(doctor);
+    setSelectedSlot(slot);
+  };
+
+  const handleBookAppointment = () => {
+    if (!selectedDoctor || !selectedSlot) {
+      alert("Please select a doctor and time slot");
+      return;
+    }
+
+    const newAppointment = {
+      id: appointments.length + 1,
+      doctorName: selectedDoctor.name,
+      specialization: selectedSpecialization,
+      date: formattedDateForDB,
+      time: selectedSlot,
+      status: "Confirmed"
+    };
+
+    // Store in appointments table (state)
+    setAppointments([...appointments, newAppointment]);
+    
+    // In a real app, you would send this to backend API
+    // Example: await axios.post('/api/appointments', newAppointment);
+    
+    console.log("Appointment booked:", newAppointment);
+    alert(`Appointment booked with ${selectedDoctor.name} at ${selectedSlot}`);
+    
+    // Reset selections
+    setSelectedDoctor(null);
+    setSelectedSlot("");
+  };
+
   return (
+<<<<<<< HEAD
     <div className="min-vh-100 bg-light">
       <PatientNavbar />
       
@@ -100,124 +173,191 @@ const PatientDashboard = () => {
               <div className="card-body">
                 <h5>Welcome, {patientData.name}!</h5>
                 <p className="text-muted small mb-3">Manage your healthcare</p>
+=======
+    <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+      {/* Navbar */}
+      <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
+        <div className="container">
+          <a className="navbar-brand fw-bold fs-4" href="/patient" style={{ color: "#ffffff" }}>
+            E-MED Patient
+          </a>
 
-                <div className="mb-3">
-                  <p className="mb-1 small">
-                    <strong>Age:</strong> {patientData.age}
-                  </p>
-                  <p className="mb-1 small">
-                    <strong>Blood:</strong> {patientData.bloodType}
-                  </p>
-                  <p className="mb-0 small">
-                    <strong>Phone:</strong> {patientData.phone}
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="collapse navbar-collapse" id="patientNavbar">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <a className="nav-link fw-medium" href="/patient" style={{ color: "#e8f5e9" }}>
+                  Dashboard
+                </a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link fw-medium" href="/patient/EditPatient" style={{ color: "#e8f5e9" }}>
+                  Edit Profile
+                </a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link fw-medium" href="/patient/FeedbackPage" style={{ color: "#e8f5e9" }}>
+                  Feedback
+                </a>
+              </li>
+            </ul>
+            <button
+              className="btn btn-light rounded-pill px-4 ms-lg-2 fw-medium"
+              onClick={handleLogout}
+              style={{ color: "#48b575" }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
 
-            <div className="card">
-              <div className="card-header">
-                <h6>Upcoming</h6>
-              </div>
-              <div className="card-body p-3">
-                {upcomingAppointments.map((apt) => (
-                  <div key={apt.id} className="border-bottom pb-2 mb-2">
-                    <div className="d-flex justify-content-between">
-                      <span className="fw-bold small">{apt.doctorName}</span>
-                      <span className="badge bg-info small">{apt.date}</span>
-                    </div>
-                    <small className="text-muted">
-                      {apt.time} - {apt.type}
-                    </small>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div style={{ paddingTop: "80px" }}></div>
+>>>>>>> ketan
 
-            <div className="card">
-              <div className="card-body p-3">
-                <div className="row text-center">
-                  <div className="col-6">
-                    <div className="p-2">
-                      <h5 className="text-primary mb-1">
-                        {upcomingAppointments.length}
-                      </h5>
-                      <small>Upcoming</small>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="p-2">
-                      <h5 className="text-primary mb-1">
-                        {appointmentHistory.length}
-                      </h5>
-                      <small>Completed</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="container py-4">
+        {/* Welcome Card */}
+        <div className="shadow-sm border-0 mb-4 p-4 rounded-3" style={{ backgroundColor: "white" }}>
+          <h3 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Welcome, Patient!</h3>
+          <p className="text-muted">Book appointments with doctors today</p>
+        </div>
+
+        {/* Appointment Status */}
+        {selectedDoctor && selectedSlot && (
+          <div className="alert alert-info mb-4" role="alert">
+            <strong>Selected:</strong> {selectedDoctor.name} at {selectedSlot} on {currentDate}
+            <button 
+              className="btn btn-sm btn-success ms-3"
+              onClick={handleBookAppointment}
+            >
+              Confirm Booking
+            </button>
+          </div>
+        )}
+
+        {/* Specialization Selection */}
+        <div className="shadow-sm border-0 mb-4 p-4 rounded-3" style={{ backgroundColor: "white" }}>
+          <h5 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>Find Doctor by Specialization</h5>
+          
+          <div className="mb-4">
+            <select 
+              className="form-control"
+              value={selectedSpecialization}
+              onChange={(e) => {
+                setSelectedSpecialization(e.target.value);
+                setSelectedDoctor(null);
+                setSelectedSlot("");
+              }}
+              style={{
+                padding: '10px',
+                border: '1px solid #e9ecef',
+                borderRadius: '8px',
+                maxWidth: '300px'
+              }}
+            >
+              <option value="">Select Specialization</option>
+              {specializations.map((spec) => (
+                <option key={spec} value={spec}>{spec}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="col-lg-8">
-            <div id="doctor-list" className="card mb-4">
-              <div className="card-header">
-                <h6>Available Doctors</h6>
+          {/* Doctor Display */}
+          {selectedSpecialization && (
+            <div className="mt-4">
+              <div className="mb-3">
+                <h6 className="fw-bold" style={{ color: '#2c3e50' }}>Today's Date: {currentDate}</h6>
               </div>
-              <div className="card-body p-3">
-                <div className="row g-3">
-                  {doctorsList.map((doctor) => (
-                    <div key={doctor.id} className="col-md-6">
-                      <div className="border p-3 rounded">
-                        <h6 className="mb-1">{doctor.name}</h6>
-                        <p className="text-muted mb-2 small">
-                          {doctor.specialty}
-                        </p>
-                        <small>
-                          <strong>Available:</strong> {doctor.availability}
-                        </small>
-                        <div className="mt-2">
-                          <button className="btn btn-primary btn-sm w-100">
-                            Book
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div id="appointment-history" className="card">
-              <div className="card-header">
-                <h6>Appointment History</h6>
-              </div>
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-sm mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Date</th>
-                        <th>Doctor</th>
-                        <th>Specialty</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appointmentHistory.map((apt) => (
-                        <tr key={apt.id}>
-                          <td>{apt.date}</td>
-                          <td>{apt.doctor}</td>
-                          <td>{apt.specialty}</td>
-                          <td>
-                            <span className="badge bg-success">Completed</span>
-                          </td>
-                        </tr>
+              
+              {doctorsBySpecialization[selectedSpecialization]?.map((doctor) => (
+                <div key={doctor.id} className="border p-3 rounded-3 mb-3">
+                  <h6 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>{doctor.name}</h6>
+                  <p className="text-muted mb-2">{doctor.specialty}</p>
+                  
+                  <div className="mb-3">
+                    <small className="fw-medium" style={{ color: '#2c3e50' }}>Available Time Slots:</small>
+                    <div className="d-flex gap-2 mt-2 flex-wrap">
+                      {doctor.todaySlots.map((slot, index) => (
+                        <button
+                          key={index}
+                          className={`btn btn-sm ${selectedDoctor?.id === doctor.id && selectedSlot === slot ? 'btn-success' : ''}`}
+                          style={{
+                            backgroundColor: selectedDoctor?.id === doctor.id && selectedSlot === slot ? '#28a745' : '#48b575',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '5px 12px'
+                          }}
+                          onClick={() => handleSlotSelect(doctor, slot)}
+                        >
+                          {slot}
+                        </button>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming Appointments */}
+        <div className="shadow-sm border-0 mb-4 p-4 rounded-3" style={{ backgroundColor: "white" }}>
+          <h5 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>Your Appointments</h5>
+          <div className="table-responsive">
+            <table className="table table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Doctor</th>
+                  <th>Specialization</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appointments.map((appointment) => (
+                  <tr key={appointment.id}>
+                    <td>{appointment.id}</td>
+                    <td>{appointment.doctorName}</td>
+                    <td>{appointment.specialization}</td>
+                    <td>{appointment.date}</td>
+                    <td>{appointment.time}</td>
+                    <td>
+                      <span className={`badge ${appointment.status === 'Confirmed' ? 'bg-success' : 'bg-secondary'}`}>
+                        {appointment.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Specialization Cards */}
+        <div className="shadow-sm border-0 p-4 rounded-3" style={{ backgroundColor: "white" }}>
+          <h5 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>Available Specializations</h5>
+          <div className="row g-3">
+            {specializations.map((spec) => (
+              <div key={spec} className="col-md-4">
+                <div 
+                  className="p-3 rounded-3 border cursor-pointer"
+                  style={{ 
+                    borderColor: '#48b575',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setSelectedSpecialization(spec)}
+                >
+                  <h6 className="fw-bold mb-1" style={{ color: '#2c3e50' }}>{spec}</h6>
+                  <small className="text-muted">
+                    {spec === "Cardiology" && "Heart specialists"}
+                    {spec === "Dentistry" && "Dental care"}
+                    {spec === "General Physician" && "General health"}
+                  </small>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

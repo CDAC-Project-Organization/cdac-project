@@ -1,5 +1,9 @@
 import { useState } from "react";
+<<<<<<< HEAD
 import PatientNavbar from "./PatientNavbar";
+=======
+import PatientNavbar from './PatientNavbar';
+>>>>>>> ketan
 
 function EditPatient() {
   const [formData, setFormData] = useState({
@@ -63,10 +67,17 @@ function EditPatient() {
   return (
     <div className="min-vh-100 bg-light">
       <PatientNavbar />
+<<<<<<< HEAD
       
       <div className="container py-4">
       {/* Page Header */}
       <div className="row mb-4 align-items-center">
+=======
+      <div style={{ paddingTop: "80px" }}></div>
+      
+      <div className="container py-4">
+        <div className="row mb-4 align-items-center">
+>>>>>>> ketan
         <div className="col">
           <h1 className="h2 fw-bold text-primary">Edit Profile Information</h1>
           <p className="text-muted">Update your personal details below</p>
@@ -250,6 +261,7 @@ function EditPatient() {
             </div>
           </form>
         </div>
+      </div>
       </div>
     </div>
   </div>

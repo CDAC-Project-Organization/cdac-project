@@ -1,6 +1,10 @@
 import { useState } from "react";
 import axios from "axios";
+<<<<<<< HEAD
 import PatientNavbar from "./PatientNavbar";
+=======
+import PatientNavbar from './PatientNavbar';
+>>>>>>> ketan
 
 function FeedbackPage({ appointmentId }) {
   const [rating, setRating] = useState(5);
@@ -26,9 +30,16 @@ function FeedbackPage({ appointmentId }) {
   return (
     <div className="min-vh-100 bg-light">
       <PatientNavbar />
+<<<<<<< HEAD
       
       <div className="container py-5">
       <div className="row justify-content-center">
+=======
+      <div style={{ paddingTop: "80px" }}></div>
+      
+      <div className="container py-5">
+        <div className="row justify-content-center">
+>>>>>>> ketan
         <div className="col-12 col-sm-10 col-md-6 col-lg-4">
           <div className="card shadow-sm border-0">
             <div className="card-body p-4">
