@@ -26,62 +26,95 @@ function App() {
         <Route path="/login" element=<Login /> />
         <Route path="/doctors" element=<ShowDoctors /> />
         <Route path="/signup" element=<Registration /> />
-        <Route path="/admin" element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/doctorList" element={
-          <ProtectedRoute requiredRole="admin">
-            <DoctorList />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/patientList" element={
-          <ProtectedRoute requiredRole="admin">
-            <PatientList />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/addDoctor" element={
-          <ProtectedRoute requiredRole="admin">
-            <AddDoctor />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/editDoctor/:id" element={
-          <ProtectedRoute requiredRole="admin">
-            <EditDoctor />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/appointments" element={
-          <ProtectedRoute requiredRole="admin">
-            <Appointments />
-          </ProtectedRoute>
-        } />
-        <Route path="/patient" element={
-          <ProtectedRoute requiredRole="patient">
-            <PatientDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/patient/EditPatient" element={
-          <ProtectedRoute requiredRole="patient">
-            <EditPatient />
-          </ProtectedRoute>
-        } />
-        <Route path="/patient/FeedbackPage" element={
-          <ProtectedRoute requiredRole="patient">
-            <FeedbackPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/doctor" element={
-          <ProtectedRoute requiredRole="doctor">
-            <DoctorDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/doctor/doctorEdit" element={
-          <ProtectedRoute requiredRole="doctor">
-            <DoctorEditProfile />
-          </ProtectedRoute>
-        } />
-        
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/doctorList"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <DoctorList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/patientList"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <PatientList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/addDoctor"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AddDoctor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/editDoctor/:id"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <EditDoctor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/appointments"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <Appointments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient"
+          element={
+            <ProtectedRoute requiredRole="patient">
+              <PatientDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/EditPatient"
+          element={
+            <ProtectedRoute requiredRole="patient">
+              <EditPatient />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/FeedbackPage"
+          element={
+            <ProtectedRoute requiredRole="patient">
+              <FeedbackPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor"
+          element={
+            <ProtectedRoute requiredRole="doctor">
+              <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/doctorEdit"
+          element={
+            <ProtectedRoute requiredRole="doctor">
+              <DoctorEditProfile />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Catch-all route for undefined paths */}
         <Route path="*" element={<ErrorPage />} />
       </Routes>
