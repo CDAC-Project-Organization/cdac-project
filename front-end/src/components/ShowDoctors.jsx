@@ -14,6 +14,26 @@ const initialDoctors = [
     available_time: "10:00 AM - 1:00 PM",
   },
   {
+    id: 4,
+    name: "Dr. Rajesh Kumar",
+    specialization: "Cardiologist",
+    clinic_name: "Advanced Heart Center",
+    clinic_location: "Bandra West, Mumbai",
+    consultation_fee: 900.0,
+    available_days: "Tue, Thu, Sat",
+    available_time: "2:00 PM - 5:00 PM",
+  },
+  {
+    id: 5,
+    name: "Dr. Anjali Desai",
+    specialization: "Cardiologist",
+    clinic_name: "Cardio Wellness",
+    clinic_location: "Pune Camp, Pune",
+    consultation_fee: 750.0,
+    available_days: "Mon - Fri",
+    available_time: "9:00 AM - 12:00 PM",
+  },
+  {
     id: 2,
     name: "Dr. Rahul Mehta",
     specialization: "Dermatologist",
@@ -22,6 +42,26 @@ const initialDoctors = [
     consultation_fee: 600.0,
     available_days: "Tue, Thu, Sat",
     available_time: "4:00 PM - 8:00 PM",
+  },
+  {
+    id: 6,
+    name: "Dr. Sneha Reddy",
+    specialization: "Dermatologist",
+    clinic_name: "Radiant Skin Clinic",
+    clinic_location: "Koramangala, Bengaluru",
+    consultation_fee: 700.0,
+    available_days: "Mon, Wed, Fri",
+    available_time: "10:00 AM - 2:00 PM",
+  },
+  {
+    id: 7,
+    name: "Dr. Vikram Mehta",
+    specialization: "Dermatologist",
+    clinic_name: "Dental Care Plus",
+    clinic_location: "Juhu, Mumbai",
+    consultation_fee: 650.0,
+    available_days: "Tue, Thu, Sat",
+    available_time: "3:00 PM - 7:00 PM",
   },
   {
     id: 3,
@@ -33,13 +73,35 @@ const initialDoctors = [
     available_days: "Mon - Sat",
     available_time: "9:30 AM - 12:30 PM",
   },
+  {
+    id: 8,
+    name: "Dr. Arjun Sharma",
+    specialization: "Pediatrician",
+    clinic_name: "Child Care Center",
+    clinic_location: "Andheri West, Mumbai",
+    consultation_fee: 650.0,
+    available_days: "Mon, Wed, Fri",
+    available_time: "10:00 AM - 1:00 PM",
+  },
+  {
+    id: 9,
+    name: "Dr. Kavita Nair",
+    specialization: "Pediatrician",
+    clinic_name: "Kids Wellness Hub",
+    clinic_location: "Baner, Pune",
+    consultation_fee: 600.0,
+    available_days: "Tue, Thu, Sat",
+    available_time: "11:00 AM - 2:00 PM",
+  },
 ];
 
 const ShowDoctors = () => {
   const [doctors] = useState(initialDoctors);
 
   const navigate = useNavigate();
-  const handleBookAppointment = (doctorId) => {
+  const handleBookAppointment = (doctor) => {
+    // Store the selected doctor in localStorage for later use
+    localStorage.setItem('selectedDoctorForBooking', JSON.stringify(doctor));
     navigate("/login");
   };
   return (
@@ -110,7 +172,7 @@ const ShowDoctors = () => {
                 <div className="card-footer bg-white border-0 pt-0">
                   <button
                     className="btn btn-primary w-100"
-                    onClick={() => handleBookAppointment(doc.id)}
+                    onClick={() => handleBookAppointment(doc)}
                   >
                     Book Appointment
                   </button>
