@@ -39,7 +39,9 @@ const ShowDoctors = () => {
   const [doctors] = useState(initialDoctors);
 
   const navigate = useNavigate();
-  const handleBookAppointment = (doctorId) => {
+  const handleBookAppointment = (doctor) => {
+    // Store the selected doctor in localStorage for later use
+    localStorage.setItem('selectedDoctorForBooking', JSON.stringify(doctor));
     navigate("/login");
   };
   return (
@@ -110,7 +112,7 @@ const ShowDoctors = () => {
                 <div className="card-footer bg-white border-0 pt-0">
                   <button
                     className="btn btn-primary w-100"
-                    onClick={() => handleBookAppointment(doc.id)}
+                    onClick={() => handleBookAppointment(doc)}
                   >
                     Book Appointment
                   </button>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const PatientDashboard = () => {
@@ -53,6 +53,39 @@ const PatientDashboard = () => {
       }
     ]
   };
+
+  // Check for pre-selected doctor from booking flow
+  useEffect(() => {
+    const storedDoctor = localStorage.getItem('selectedDoctorForBooking');
+    if (storedDoctor) {
+      const doctor = JSON.parse(storedDoctor);
+      
+      // Map the specialization from the stored doctor to our dropdown
+      const specializationMap = {
+        'Cardiologist': 'Cardiology',
+        'Dermatologist': 'Dentistry', // Map to Dentistry for demo
+        'Pediatrician': 'General Physician' // Map to General Physician for demo
+      };
+      
+      const mappedSpecialization = specializationMap[doctor.specialization] || 'General Physician';
+      
+      // Set the specialization
+      setSelectedSpecialization(mappedSpecialization);
+      
+      // Find and set the corresponding doctor from our doctors list
+      const doctorInList = doctorsBySpecialization[mappedSpecialization]?.find(d => 
+        d.name.toLowerCase().includes(doctor.name.toLowerCase().split(' ')[1]) || 
+        d.specialty.toLowerCase().includes(doctor.specialization.toLowerCase())
+      );
+      
+      if (doctorInList) {
+        setSelectedDoctor(doctorInList);
+      }
+      
+      // Clear the stored doctor after processing
+      localStorage.removeItem('selectedDoctorForBooking');
+    }
+  }, []);
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -160,6 +193,15 @@ const PatientDashboard = () => {
             >
               Confirm Booking
             </button>
+          </div>
+        )}
+        
+        {/* Pre-selected Doctor Message */}
+        {selectedDoctor && !selectedSlot && (
+          <div className="alert alert-success mb-4" role="alert">
+            <strong>Doctor Pre-selected:</strong> {selectedDoctor.name} ({selectedDoctor.specialty})
+            <br />
+            <small>Please select a time slot below to complete your booking.</small>
           </div>
         )}
 
