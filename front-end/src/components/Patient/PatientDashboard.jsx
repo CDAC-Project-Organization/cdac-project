@@ -1,10 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-import "bootstrap/dist/css/bootstrap.min.css";
-import PatientNavbar from "./PatientNavbar";
-=======
->>>>>>> ketan
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
@@ -30,58 +25,6 @@ const PatientDashboard = () => {
     }
   ]);
 
-<<<<<<< HEAD
-  const appointmentHistory = [
-    {
-      id: 1,
-      date: "Feb 10, 2025",
-      doctor: "Dr. Priya Patel",
-      specialty: "Cardiology",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      date: "Jan 25, 2025",
-      doctor: "Dr. Amit Kumar",
-      specialty: "Dentistry",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      date: "Jan 15, 2025",
-      doctor: "Dr. Neha Singh",
-      specialty: "General",
-      status: "Completed",
-    },
-  ];
-
-  const doctorsList = [
-    {
-      id: 1,
-      name: "Dr. Priya Patel",
-      specialty: "Cardiologist",
-      availability: "Mon, Wed, Fri",
-    },
-    {
-      id: 2,
-      name: "Dr. Amit Kumar",
-      specialty: "Dentist",
-      availability: "Tue, Thu",
-    },
-    {
-      id: 3,
-      name: "Dr. Neha Singh",
-      specialty: "General Physician",
-      availability: "Mon-Fri",
-    },
-    {
-      id: 4,
-      name: "Dr. Rajesh Gupta",
-      specialty: "Dermatologist",
-      availability: "Wed, Thu",
-    },
-  ];
-=======
   const specializations = ["Cardiology", "Dentistry", "General Physician"];
   
   const doctorsBySpecialization = {
@@ -119,7 +62,6 @@ const PatientDashboard = () => {
   });
   
   const formattedDateForDB = new Date().toISOString().split('T')[0];
->>>>>>> ketan
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -162,18 +104,6 @@ const PatientDashboard = () => {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="min-vh-100 bg-light">
-      <PatientNavbar />
-      
-      <div className="container-fluid p-3">
-        <div className="row g-4">
-          <div className="col-lg-4">
-            <div className="card h-100">
-              <div className="card-body">
-                <h5>Welcome, {patientData.name}!</h5>
-                <p className="text-muted small mb-3">Manage your healthcare</p>
-=======
     <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
@@ -212,7 +142,6 @@ const PatientDashboard = () => {
       </nav>
 
       <div style={{ paddingTop: "80px" }}></div>
->>>>>>> ketan
 
       <div className="container py-4">
         {/* Welcome Card */}

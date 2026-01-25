@@ -55,26 +55,6 @@ const DoctorList = () => {
     };
 
     return (
-<<<<<<< HEAD
-        <div className="min-vh-100 bg-light">
-            <AdminNavbar />
-            <div style={{ paddingTop: "80px" }}></div>
-            
-            <div className="p-4">
-                <div className="mb-4">
-                
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h2 className="fw-bold">Doctor Management</h2>
-                        <p className="text-muted mb-0">View and manage all registered doctors </p>
-                    </div>
-                    <div className="d-flex gap-2">
-                       
-                        <Button 
-                            variant="primary"
-                            onClick={() => navigate('/admin/addDoctor')}
-                            size="lg"
-=======
         <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
             {/* Navbar */}
             <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
@@ -124,7 +104,6 @@ const DoctorList = () => {
                             className="btn btn-light rounded-pill px-4 ms-lg-2 fw-medium"
                             onClick={handleLogout}
                             style={{ color: "#48b575" }}
->>>>>>> ketan
                         >
                             Logout
                         </button>
@@ -188,11 +167,6 @@ const DoctorList = () => {
                                 </InputGroup>
                             </div>
                         </div>
-<<<<<<< HEAD
-                    )}
-                </Card.Body>
-            </Card>
-=======
                     </Card.Body>
                 </Card>
 
@@ -293,7 +267,6 @@ const DoctorList = () => {
                     </Card.Body>
                 </Card>
             </div>
->>>>>>> ketan
         </div>
         </div>
     );

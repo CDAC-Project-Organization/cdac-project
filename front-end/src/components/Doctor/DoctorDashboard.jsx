@@ -66,12 +66,8 @@ const DoctorDashboard = () => {
   return (
     <div className="min-vh-100 bg-light">
       <DoctorNavbar />
-<<<<<<< HEAD
-      
-=======
       <div style={{ paddingTop: "80px" }}></div>
 
->>>>>>> ketan
       {/* Content */}
       <div className="container py-4">
         <h3 className="mb-3">Today&apos;s Appointments</h3>

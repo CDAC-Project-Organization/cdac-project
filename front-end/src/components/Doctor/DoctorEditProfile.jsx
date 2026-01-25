@@ -2,11 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-import DoctorNavbar from "./DoctorNavbar";
-=======
 import DoctorNavbar from './DoctorNavbar';
->>>>>>> ketan
 
 const DoctorEditProfile = () => {
   const navigate = useNavigate();
@@ -104,22 +100,6 @@ const DoctorEditProfile = () => {
   return (
     <div className="min-vh-100 bg-light">
       <DoctorNavbar />
-<<<<<<< HEAD
-      
-      <Container className="py-4">
-      <div className="mb-4">
-        <Button
-          variant="outline-secondary"
-          onClick={() => navigate(-1)}
-          className="mb-3"
-        >
-          ← Back
-        </Button>
-
-        <h2>Edit Doctor Profile</h2>
-        <p className="text-muted">Update your professional information</p>
-      </div>
-=======
       <div style={{ paddingTop: "80px" }}></div>
       
       <Container className="py-4">
@@ -127,7 +107,6 @@ const DoctorEditProfile = () => {
           <h2>Edit Doctor Profile</h2>
           <p className="text-muted">Update your professional information</p>
         </div>
->>>>>>> ketan
 
       {success && (
         <Alert variant="success" dismissible onClose={() => setSuccess("")}>
@@ -253,14 +232,8 @@ const DoctorEditProfile = () => {
         </Card.Body>
       </Card>
       </Container>
-<<<<<<< HEAD
-    </div>
-  );
-};
-=======
       </div>
     );
   };
->>>>>>> ketan
 
 export default DoctorEditProfile;
