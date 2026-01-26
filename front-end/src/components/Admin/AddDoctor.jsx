@@ -1,7 +1,9 @@
 // src/components/admin/AddDoctor.jsx
 import React, { useState } from 'react';
-import { Form, Button, Card } from 'react-bootstrap';
+import { Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import AdminNavbar from './AdminNavBar';
+import axios from 'axios';
 
 const AddDoctor = () => {
     const navigate = useNavigate();
@@ -11,20 +13,32 @@ const AddDoctor = () => {
         email: '',
         password: '',
         phone: '',
-        specialization: '',
-        clinic_name: '',
-        clinic_location: '',
-        consultation_fee: '',
+        dob: '',
         qualification: '',
-        experience_years: ''
+        speciality: '',
+        location: '',
+        fees: '',
+        experience: '',
+        startTime: '',
+        endTime: ''
     });
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const [apiError, setApiError] = useState('');
+    const [apiSuccess, setApiSuccess] = useState('');
 
-    const specializations = [
-        'Cardiology', 'Dermatology', 'General Medicine', 'Neurology',
-        'Pediatrics', 'Orthopedics', 'Gynecology', 'ENT'
+    const specialities = [
+        'Cardiologist',
+        'Orthopedic',
+        'Neurologist',
+        'Gynecologist',
+        'Pediatrician',
+        'Dermatologist',
+        'General Physician',
+        'ENT Specialist',
+        'Dentist',
+        'Psychiatrist'
     ];
 
     const handleChange = (e) => {
@@ -33,77 +47,133 @@ const AddDoctor = () => {
             ...prev,
             [name]: value
         }));
+        
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+       
+        if (apiError) setApiError('');
     };
 
-    const handleSubmit = (e) => {
+    const validateForm = () => {
+        const newErrors = {};
+        
+        // Required fields validation
+        if (!formData.name.trim()) newErrors.name = 'Name is required';
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Invalid email format';
+        }
+        if (!formData.password.trim()) newErrors.password = 'Password is required';
+        if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+        if (!formData.qualification.trim()) newErrors.qualification = 'Qualification is required';
+        if (!formData.speciality) newErrors.speciality = 'Speciality is required';
+        if (!formData.location.trim()) newErrors.location = 'Location is required';
+        if (!formData.fees || formData.fees <= 0) newErrors.fees = 'Valid fees is required';
+        if (!formData.experience || formData.experience < 0) newErrors.experience = 'Valid experience is required';
+        if (!formData.startTime) newErrors.startTime = 'Start time is required';
+        if (!formData.endTime) newErrors.endTime = 'End time is required';
+        
+      
+        if (formData.startTime && formData.endTime) {
+            const start = new Date(`2000-01-01T${formData.startTime}`);
+            const end = new Date(`2000-01-01T${formData.endTime}`);
+            if (end <= start) {
+                newErrors.endTime = 'End time must be after start time';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert(`Doctor ${formData.name} added successfully!`);
-        navigate('/admin/doctorList');
-    };
+        
+        if (!validateForm()) {
+            return;
+        }
 
-    const handleLogout = () => {
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("isAuthenticated");
-        navigate("/login");
+        setLoading(true);
+        setApiError('');
+        setApiSuccess('');
+
+        
+        const doctorData = {
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+            phone: formData.phone.trim(),
+            dob: formData.dob || null,
+            qualification: formData.qualification.trim(),
+            speciality: formData.speciality,
+            location: formData.location.trim(),
+            fees: parseFloat(formData.fees),
+            experience: parseInt(formData.experience),
+            startTime: formData.startTime,
+            endTime: formData.endTime
+        };
+
+        try {
+            const response = await axios.post('http://localhost:8080/doctor/AddDoctors', doctorData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': '*/*'
+                }
+            });
+
+            if (response.data.status === 'Success') {
+                setApiSuccess('Doctor added successfully!');
+                
+                setFormData({
+                    name: '',
+                    email: '',
+                    password: '',
+                    phone: '',
+                    dob: '',
+                    qualification: '',
+                    speciality: '',
+                    location: '',
+                    fees: '',
+                    experience: '',
+                    startTime: '',
+                    endTime: ''
+                });
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    navigate('/admin/doctorList');
+                }, 1000);
+            } else {
+                setApiError(response.data.message || 'Failed to add doctor');
+            }
+        } catch (error) {
+            if (error.response) {
+                // Server responded with error
+                const errorData = error.response.data;
+                if (errorData.status === 'Failed' && errorData.message.includes('Email already exists')) {
+                    setApiError('Email already exists. Please use a different email.');
+                    setErrors(prev => ({ ...prev, email: 'Email already exists' }));
+                } else {
+                    setApiError(errorData.message || 'Failed to add doctor. Please try again.');
+                }
+            } else if (error.request) {
+                // Request made but no response
+                setApiError('Network error. Please check your connection.');
+            } else {
+                // Other errors
+                setApiError('An error occurred. Please try again.');
+            }
+            console.error('Error adding doctor:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-            {/* Navbar */}
-            <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
-                <div className="container">
-                    <a className="navbar-brand fw-bold fs-4" href="/admin" style={{ color: "#ffffff" }}>
-                        E-MED Admin
-                    </a>
-
-                    <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#adminNavbar"
-                    >
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-
-                    <div className="collapse navbar-collapse" id="adminNavbar">
-                        <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li className="nav-item">
-                                <a className="nav-link fw-medium" href="/admin" style={{ color: "#e8f5e9" }}>
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link fw-medium" href="/admin/doctorList" style={{ color: "#e8f5e9" }}>
-                                    Doctors
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link fw-medium" href="/admin/patientList" style={{ color: "#e8f5e9" }}>
-                                    Patients
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link fw-medium" href="/admin/addDoctor" style={{ color: "#e8f5e9" }}>
-                                    Add Doctor
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a className="nav-link fw-medium" href="/admin/appointments" style={{ color: "#e8f5e9" }}>
-                                    All Appointment
-                                </a>
-                            </li>
-                        </ul>
-                        <button
-                            className="btn btn-light rounded-pill px-4 ms-lg-2 fw-medium"
-                            onClick={handleLogout}
-                            style={{ color: "#48b575" }}
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </nav>
-
+            <AdminNavbar />
+            
             <div style={{ paddingTop: "80px" }}></div>
 
             <div className="container py-4">
@@ -113,14 +183,26 @@ const AddDoctor = () => {
                             <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Add New Doctor</h2>
                             <p className="text-muted mb-0">Fill in doctor details below</p>
                         </div>
-                       
                     </div>
                 </div>
 
+                {/* Success/Error Messages */}
+                {apiSuccess && (
+                    <Alert variant="success" className="mb-3">
+                        {apiSuccess} Redirecting to doctor list...
+                    </Alert>
+                )}
+                {apiError && (
+                    <Alert variant="danger" className="mb-3">
+                        {apiError}
+                    </Alert>
+                )}
+
                 <Card className="shadow-sm border-0" style={{ borderRadius: '16px' }}>
                     <Card.Body className="p-4">
-                        <Form onSubmit={handleSubmit}>
+                        <Form onSubmit={handleSubmit} noValidate>
                             <div className="row">
+                                {/* Personal Information */}
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
@@ -131,6 +213,7 @@ const AddDoctor = () => {
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
+                                            isInvalid={!!errors.name}
                                             required
                                             style={{
                                                 padding: '10px',
@@ -138,7 +221,11 @@ const AddDoctor = () => {
                                                 borderRadius: '8px'
                                             }}
                                             placeholder="Dr. Full Name"
+                                            disabled={loading}
                                         />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.name}
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
 
@@ -152,6 +239,7 @@ const AddDoctor = () => {
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
+                                            isInvalid={!!errors.email}
                                             required
                                             style={{
                                                 padding: '10px',
@@ -159,95 +247,11 @@ const AddDoctor = () => {
                                                 borderRadius: '8px'
                                             }}
                                             placeholder="doctor@example.com"
+                                            disabled={loading}
                                         />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Phone *
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="9876543210"
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Specialization *
-                                        </Form.Label>
-                                        <Form.Select
-                                            name="specialization"
-                                            value={formData.specialization}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                        >
-                                            <option value="">Select Specialization</option>
-                                            {specializations.map(spec => (
-                                                <option key={spec} value={spec}>{spec}</option>
-                                            ))}
-                                        </Form.Select>
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Clinic Name *
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="text"
-                                            name="clinic_name"
-                                            value={formData.clinic_name}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="ABC Hospital"
-                                        />
-                                    </Form.Group>
-                                </div>
-
-                                <div className="col-md-6 mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Consultation Fee *
-                                        </Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            name="consultation_fee"
-                                            value={formData.consultation_fee}
-                                            onChange={handleChange}
-                                            required
-                                            style={{
-                                                padding: '10px',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
-                                            placeholder="500"
-                                            min="0"
-                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.email}
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
 
@@ -261,6 +265,7 @@ const AddDoctor = () => {
                                             name="password"
                                             value={formData.password}
                                             onChange={handleChange}
+                                            isInvalid={!!errors.password}
                                             required
                                             style={{
                                                 padding: '10px',
@@ -268,68 +273,245 @@ const AddDoctor = () => {
                                                 borderRadius: '8px'
                                             }}
                                             placeholder="Enter password"
+                                            disabled={loading}
                                         />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.password}
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
 
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Qualification
+                                            Phone Number *
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            isInvalid={!!errors.phone}
+                                            required
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            placeholder="9876543210"
+                                            disabled={loading}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.phone}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Date of Birth
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="date"
+                                            name="dob"
+                                            value={formData.dob}
+                                            onChange={handleChange}
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            disabled={loading}
+                                        />
+                                    </Form.Group>
+                                </div>
+
+                                {/* Professional Information */}
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Speciality *
+                                        </Form.Label>
+                                        <Form.Select
+                                            name="speciality"
+                                            value={formData.speciality}
+                                            onChange={handleChange}
+                                            isInvalid={!!errors.speciality}
+                                            required
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            disabled={loading}
+                                        >
+                                            <option value="">Select Speciality</option>
+                                            {specialities.map(spec => (
+                                                <option key={spec} value={spec}>{spec}</option>
+                                            ))}
+                                        </Form.Select>
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.speciality}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Qualification *
                                         </Form.Label>
                                         <Form.Control
                                             type="text"
                                             name="qualification"
                                             value={formData.qualification}
                                             onChange={handleChange}
+                                            isInvalid={!!errors.qualification}
+                                            required
                                             style={{
                                                 padding: '10px',
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
-                                            placeholder="MBBS, MD, etc."
+                                            placeholder="MBBS, MD, MS, etc."
+                                            disabled={loading}
                                         />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.qualification}
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
 
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Experience (Years)
+                                            Location *
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="location"
+                                            value={formData.location}
+                                            onChange={handleChange}
+                                            isInvalid={!!errors.location}
+                                            required
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            placeholder="City, State"
+                                            disabled={loading}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.location}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Consultation Fee (₹) *
                                         </Form.Label>
                                         <Form.Control
                                             type="number"
-                                            name="experience_years"
-                                            value={formData.experience_years}
+                                            name="fees"
+                                            value={formData.fees}
                                             onChange={handleChange}
+                                            isInvalid={!!errors.fees}
+                                            required
+                                            min="0"
+                                            step="10"
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            placeholder="500"
+                                            disabled={loading}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.fees}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                </div>
+
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Experience (Years) *
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="experience"
+                                            value={formData.experience}
+                                            onChange={handleChange}
+                                            isInvalid={!!errors.experience}
+                                            required
+                                            min="0"
                                             style={{
                                                 padding: '10px',
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
                                             placeholder="5"
-                                            min="0"
+                                            disabled={loading}
                                         />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.experience}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+                                </div>
+
+                                {/* Availability */}
+                                <div className="col-md-6 mb-3">
+                                    <Form.Group>
+                                        <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
+                                            Start Time *
+                                        </Form.Label>
+                                        <Form.Control
+                                            type="time"
+                                            name="startTime"
+                                            value={formData.startTime}
+                                            onChange={handleChange}
+                                            isInvalid={!!errors.startTime}
+                                            required
+                                            style={{
+                                                padding: '10px',
+                                                border: '1px solid #e9ecef',
+                                                borderRadius: '8px'
+                                            }}
+                                            disabled={loading}
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.startTime}
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
 
                                 <div className="col-md-6 mb-3">
                                     <Form.Group>
                                         <Form.Label className="fw-medium" style={{ color: '#2c3e50' }}>
-                                            Clinic Location
+                                            End Time *
                                         </Form.Label>
                                         <Form.Control
-                                            type="text"
-                                            name="clinic_location"
-                                            value={formData.clinic_location}
+                                            type="time"
+                                            name="endTime"
+                                            value={formData.endTime}
                                             onChange={handleChange}
+                                            isInvalid={!!errors.endTime}
+                                            required
                                             style={{
                                                 padding: '10px',
                                                 border: '1px solid #e9ecef',
                                                 borderRadius: '8px'
                                             }}
-                                            placeholder="City, Address"
+                                            disabled={loading}
                                         />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.endTime}
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </div>
                             </div>
@@ -337,20 +519,37 @@ const AddDoctor = () => {
                             <div className="d-flex gap-3 mt-4">
                                 <Button
                                     type="submit"
-                                    className="rounded-pill px-4 fw-medium"
+                                    className="rounded-pill px-4 fw-medium d-flex align-items-center"
                                     style={{
                                         backgroundColor: '#48b575',
                                         color: 'white',
-                                        border: 'none'
+                                        border: 'none',
+                                        minWidth: '120px'
                                     }}
+                                    disabled={loading}
                                 >
-                                    Add Doctor
+                                    {loading ? (
+                                        <>
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                            />
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        'Add Doctor'
+                                    )}
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="outline-secondary"
                                     className="rounded-pill px-4"
                                     onClick={() => navigate('/admin/doctorList')}
+                                    disabled={loading}
                                 >
                                     Cancel
                                 </Button>

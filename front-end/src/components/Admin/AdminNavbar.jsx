@@ -28,21 +28,24 @@ const AdminNavbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top">
+    <nav
+      className="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm"
+      style={{ backgroundColor: "#48b575" }}
+    >
       <div className="container">
-        <a 
-          className="navbar-brand fw-bold text-primary" 
-          href="#" 
+        <a
+          className="navbar-brand fw-bold fs-4"
+          href="#"
           onClick={handleDashboardClick}
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", color: "#ffffff" }}
         >
           E-MED Admin
         </a>
 
-        <button 
-          className="navbar-toggler" 
-          type="button" 
-          data-bs-toggle="collapse" 
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
           data-bs-target="#adminNavbarNav"
         >
           <span className="navbar-toggler-icon"></span>
@@ -51,33 +54,37 @@ const AdminNavbar = () => {
         <div className="collapse navbar-collapse" id="adminNavbarNav">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <button 
-                className="nav-link btn btn-link text-decoration-none" 
+              <button
+                className="nav-link btn btn-link text-decoration-none fw-medium"
                 onClick={handleDashboardClick}
+                style={{ color: "#ffffff" }}
               >
                 Dashboard
               </button>
             </li>
             <li className="nav-item">
-              <button 
-                className="nav-link btn btn-link text-decoration-none" 
+              <button
+                className="nav-link btn btn-link text-decoration-none fw-medium"
                 onClick={handleDoctorsClick}
+                style={{ color: "#ffffff" }}
               >
                 Doctors
               </button>
             </li>
             <li className="nav-item">
-              <button 
-                className="nav-link btn btn-link text-decoration-none" 
+              <button
+                className="nav-link btn btn-link text-decoration-none fw-medium"
                 onClick={handlePatientsClick}
+                style={{ color: "#ffffff" }}
               >
                 Patients
               </button>
             </li>
             <li className="nav-item">
-              <button 
-                className="nav-link btn btn-link text-decoration-none" 
+              <button
+                className="nav-link btn btn-link text-decoration-none fw-medium"
                 onClick={handleAddDoctorClick}
+                style={{ color: "#ffffff" }}
               >
                 Add Doctor
               </button>
@@ -85,8 +92,9 @@ const AdminNavbar = () => {
           </ul>
 
           <button
-            className="btn btn-outline-primary ms-lg-2"
+            className="btn btn-light rounded-pill px-4 ms-lg-2 fw-medium"
             onClick={handleLogout}
+            style={{ color: "#48b575" }}
           >
             Logout
           </button>
