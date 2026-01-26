@@ -1,64 +1,161 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios"; // AXIOS IMPORT
 import PatientNavbar from "./PatientNavbar";
 
 function EditPatient() {
+  const { patientId } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    name: "Abc",
-    email: "Abc@example.com",
-    phone: "9876543210",
-    address: "123, MG Road, Pune, Maharashtra 411001",
-    gender: "Male",
-    date_of_birth: "1995-08-15",
-    blood_group: "O+",
-    profile_image: null,
+    patientName: "",
+    email: "",
+    phone: "",
+    address: "",
+    gender: "MALE",
+    dateOfBirth: "",
+    bloodGroup: "A_POSITIVE",
+    familyHistory: "",
   });
 
   const [preview, setPreview] = useState(
-    "https://via.placeholder.com/80/4a6fa5/ffffff?text=JD",
+    "https://via.placeholder.com/80/4a6fa5/ffffff?text=P",
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  // AXIOS CONFIGURATION
+  const API_BASE_URL = "http://localhost:8080";
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // Fetch patient data
+  useEffect(() => {
+    fetchPatientData();
+  }, [patientId]);
+
+  // AXIOS GET REQUEST
+  const fetchPatientData = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get(`/patient/${patientId}`); // AXIOS GET
+      const patient = response.data;
+
+      setFormData({
+        patientName: patient.patientName || "",
+        email: patient.email || "",
+        phone: patient.phone || "",
+        address: patient.address || "",
+        gender: patient.gender || "MALE",
+        dateOfBirth: patient.dateOfBirth || "",
+        bloodGroup: patient.bloodGroup || "A_POSITIVE",
+        familyHistory: patient.familyHistory || "",
+      });
+
+      if (patient.profileImage) {
+        setPreview(`${API_BASE_URL}${patient.profileImage}`);
+      }
+    } catch (err) {
+      console.error("Error fetching patient data:", err);
+      setMessage({
+        type: "danger",
+        text: "Failed to load patient data. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
-    if (name === "profile_image") {
-      setFormData((prev) => ({ ...prev, profile_image: files[0] }));
-      if (files && files[0]) {
-        setPreview(URL.createObjectURL(files[0]));
-      }
+    if (name === "profile_image" && files && files[0]) {
+      setPreview(URL.createObjectURL(files[0]));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
-
     if (message.text) setMessage({ type: "", text: "" });
   };
 
-  const handleSubmit = (e) => {
+  // AXIOS PUT REQUEST
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setMessage({ type: "", text: "" });
 
-    setTimeout(() => {
+    try {
+      const updateData = {
+        patientName: formData.patientName,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth || null,
+        bloodGroup: formData.bloodGroup,
+        familyHistory: formData.familyHistory || null,
+      };
+
+      const response = await api.put(
+        `/patient/edit-profile/${patientId}`,
+        updateData,
+      ); // AXIOS PUT
+
       setMessage({ type: "success", text: "Profile updated successfully!" });
-      setIsSubmitting(false);
+      fetchPatientData();
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
-    }, 1500);
+    } catch (err) {
+      console.error("Error updating patient:", err);
+      setMessage({
+        type: "danger",
+        text:
+          err.response?.data?.message ||
+          "Failed to update profile. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: "Abc",
-      email: "Abc@example.com",
-      phone: "9876543210",
-      address: "123, MG Road, Pune, Maharashtra 411001",
-      gender: "Male",
-      date_of_birth: "1995-08-15",
-      blood_group: "O+",
-      profile_image: null,
-    });
-    setPreview("https://via.placeholder.com/80/4a6fa5/ffffff?text=JD");
+    fetchPatientData();
     setMessage({ type: "", text: "" });
   };
+
+  const formatBloodGroup = (bg) => {
+    return bg
+      .replace("_", "+")
+      .replace("POSITIVE", "+")
+      .replace("NEGATIVE", "-");
+  };
+
+  const parseBloodGroup = (displayBg) => {
+    const map = {
+      "A+": "A_POSITIVE",
+      "A-": "A_NEGATIVE",
+      "B+": "B_POSITIVE",
+      "B-": "B_NEGATIVE",
+      "O+": "O_POSITIVE",
+      "O-": "O_NEGATIVE",
+      "AB+": "AB_POSITIVE",
+      "AB-": "AB_NEGATIVE",
+    };
+    return map[displayBg] || "A_POSITIVE";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-vh-100 bg-light">
+        <PatientNavbar />
+        <div style={{ paddingTop: "80px" }}></div>
+        <div className="container py-4">
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status"></div>
+            <p className="mt-3">Loading patient data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-vh-100 bg-light">
@@ -87,7 +184,6 @@ function EditPatient() {
           </div>
         </div>
 
-        {/* Message Alert */}
         {message.text && (
           <div
             className={`alert alert-${message.type} alert-dismissible fade show mb-4`}
@@ -102,19 +198,19 @@ function EditPatient() {
           </div>
         )}
 
-        {/* Main Form */}
         <div className="card shadow">
           <div className="card-body p-4">
             <form onSubmit={handleSubmit}>
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Full Name</label>
+                  <label className="form-label fw-medium">Full Name *</label>
                   <input
                     type="text"
                     className="form-control"
-                    name="name"
-                    value={formData.name}
+                    name="patientName"
+                    value={formData.patientName}
                     onChange={handleChange}
+                    required
                   />
                 </div>
 
@@ -125,7 +221,9 @@ function EditPatient() {
                     className="form-control bg-light"
                     value={formData.email}
                     disabled
+                    readOnly
                   />
+                  <small className="text-muted">Email cannot be changed</small>
                 </div>
 
                 <div className="col-md-6 mb-3">
@@ -134,8 +232,9 @@ function EditPatient() {
                     type="tel"
                     className="form-control"
                     name="phone"
-                    value={formData.phone}
+                    value={formData.phone || ""}
                     onChange={handleChange}
+                    placeholder="Enter phone number"
                   />
                 </div>
 
@@ -143,9 +242,14 @@ function EditPatient() {
                   <label className="form-label fw-medium">Blood Group</label>
                   <select
                     className="form-select"
-                    name="blood_group"
-                    value={formData.blood_group}
-                    onChange={handleChange}
+                    name="bloodGroup"
+                    value={formatBloodGroup(formData.bloodGroup)}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        bloodGroup: parseBloodGroup(e.target.value),
+                      })
+                    }
                   >
                     <option value="">Select Blood Group</option>
                     <option value="A+">A+</option>
@@ -165,23 +269,24 @@ function EditPatient() {
                     type="text"
                     className="form-control"
                     name="address"
-                    value={formData.address}
+                    value={formData.address || ""}
                     onChange={handleChange}
+                    placeholder="Enter your address"
                   />
                 </div>
 
                 <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Gender</label>
+                  <label className="form-label fw-medium">Gender *</label>
                   <select
                     className="form-select"
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
+                    required
                   >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
                   </select>
                 </div>
 
@@ -190,9 +295,21 @@ function EditPatient() {
                   <input
                     type="date"
                     className="form-control"
-                    name="date_of_birth"
-                    value={formData.date_of_birth}
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth || ""}
                     onChange={handleChange}
+                  />
+                </div>
+
+                <div className="col-12 mb-3">
+                  <label className="form-label fw-medium">Family History</label>
+                  <textarea
+                    className="form-control"
+                    name="familyHistory"
+                    value={formData.familyHistory || ""}
+                    onChange={handleChange}
+                    rows="3"
+                    placeholder="Enter any family medical history..."
                   />
                 </div>
 
@@ -206,7 +323,7 @@ function EditPatient() {
                     onChange={handleChange}
                   />
                   <small className="text-muted">
-                    Leave empty to keep current image
+                    Note: Image upload depends on backend implementation
                   </small>
                 </div>
               </div>
@@ -225,7 +342,17 @@ function EditPatient() {
                   className="btn btn-primary px-4"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Saving..." : "Save Changes"}
+                  {isSubmitting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      ></span>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </button>
               </div>
             </form>
