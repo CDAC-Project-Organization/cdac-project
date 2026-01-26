@@ -8,16 +8,18 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.healthcare.dtos.ApiResponse;
+import com.healthcare.dtos.EditPatientRequest;
 import com.healthcare.dtos.PatientRequestDTO;
 import com.healthcare.dtos.PatientResponseDTO;
 import com.healthcare.service.PatientService;
 
-
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -54,4 +56,14 @@ public class PatientController {
     	System.out.println(dto);
     	return ResponseEntity.ok(patientService.addPatient(dto));
     }
+
+    @PutMapping("/edit-profile/{patientId}")
+    public ResponseEntity<ApiResponse> editPatientProfile(
+        @PathVariable Long patientId,
+        @RequestBody @Valid EditPatientRequest request) {
+
+    ApiResponse response = patientService.editPatientProfile(patientId, request);
+    return ResponseEntity.ok(response);
+}
+
 }
