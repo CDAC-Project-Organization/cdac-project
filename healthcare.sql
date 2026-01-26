@@ -119,12 +119,12 @@ CREATE INDEX idx_holiday_date ON doctor_holiday(holiday_date);
 
 
 CREATE TABLE feedback (
-    feedback_id     INT AUTO_INCREMENT PRIMARY KEY,
+    feedback_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
     rating          INT NOT NULL,
     comments        TEXT,
-    appointment_id  INT NOT NULL,
+    appointment_id  BIGINT NOT NULL,
 
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- ✅ added column
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_feedback_appointment
         FOREIGN KEY (appointment_id)
