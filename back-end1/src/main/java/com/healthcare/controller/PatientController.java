@@ -77,6 +77,14 @@ public class PatientController {
     }
     
     
+    @GetMapping("/byUser/{userId}")
+    public ResponseEntity<PatientResponseDTO> getPatientByUserId(
+            @PathVariable Long userId) {
+
+        return ResponseEntity.ok(
+                patientService.getPatientByUserId(userId)
+        );
+    }
 
 
 

@@ -13,6 +13,7 @@ import com.healthcare.entities.Doctor;
 import com.healthcare.entities.Patient;
 import com.healthcare.entities.User;
 import com.healthcare.entities.UserRole;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -176,7 +177,27 @@ public class PatientServiceImpl implements PatientService {
     }
 
     
-    
+    @Override
+    public PatientResponseDTO getPatientByUserId(Long userId) {
+
+        Patient patient = patientRepository.findByUser_Id(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Patient not found for userId : " + userId));
+
+        PatientResponseDTO dto = new PatientResponseDTO();
+
+        dto.setPatientId(patient.getPatientId());
+        dto.setPatientName(patient.getUser().getName()); // ✔ patientName
+        dto.setEmail(patient.getUser().getEmail());
+
+        dto.setBloodGroup(patient.getBloodGroup());
+        dto.setGender(patient.getGender());
+        dto.setFamilyHistory(patient.getFamilyHistory());
+
+        return dto;
+    }
+
 
 
 }
