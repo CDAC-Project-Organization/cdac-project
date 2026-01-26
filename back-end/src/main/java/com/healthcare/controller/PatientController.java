@@ -85,5 +85,14 @@ public class PatientController {
 
         return ResponseEntity.ok(patientService.bookAppointment(dto));
     }
+    
+    @GetMapping("/byUser/{userId}")
+    public ResponseEntity<PatientResponseDTO> getPatientByUserId(
+            @PathVariable Long userId) {
+
+        return ResponseEntity.ok(
+                patientService.getPatientByUserId(userId)
+        );
+    }
 
 }

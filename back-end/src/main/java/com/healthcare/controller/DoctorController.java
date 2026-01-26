@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.healthcare.dtos.ApiResponse;
 import com.healthcare.dtos.DoctorRequestDTO;
+import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
 import com.healthcare.service.DoctorService;
 
@@ -66,7 +67,15 @@ public class DoctorController {
 	 }
 
 	
-	
+	  @GetMapping("/by-user/{userId}")
+	    public ResponseEntity<DoctorUserResponseDTO> getDoctorByUserId(
+	            @PathVariable Long userId) {
+
+	        DoctorUserResponseDTO response =
+	                doctorService.getDoctorByUserId(userId);
+
+	        return ResponseEntity.ok(response);
+	    }
 
 	
 	

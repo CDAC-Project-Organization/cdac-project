@@ -14,6 +14,7 @@ import com.healthcare.custom_exceptions.ResourceNotFoundException;
 import com.healthcare.dtos.ApiResponse;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.DoctorResponseDTO;
+import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
 import com.healthcare.entities.Doctor;
 import com.healthcare.entities.User;
@@ -104,6 +105,28 @@ public class DoctorServiceImpl implements DoctorService {
 
 		    return new ApiResponse("SUCCESS", "Doctor deleted successfully");
 		}
+	 
+	 
+	 @Override
+	    public DoctorUserResponseDTO getDoctorByUserId(Long userId) {
+
+	        Doctor doctor = doctorRepository.findByUser_Id(userId)
+	                .orElseThrow(() ->
+	                        new ResourceNotFoundException("Doctor not found for user id: " + userId)
+	                );
+
+	       
+	        DoctorUserResponseDTO dto =
+	                modelMapper.map(doctor, DoctorUserResponseDTO.class);
+
+	        // Map nested User fields manually (best practice)
+	        dto.setUserId(doctor.getUser().getId());
+	        dto.setName(doctor.getUser().getName());
+	        dto.setEmail(doctor.getUser().getEmail());
+	        dto.setPhone(doctor.getUser().getPhone());
+
+	        return dto;
+	    }
 		
 	
 

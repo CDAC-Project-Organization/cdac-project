@@ -25,5 +25,9 @@ public interface PatientService {
 	
 	ApiResponse bookAppointment(AppointmentRequestDTO dto);
 
+
+
+	PatientResponseDTO getPatientByUserId(Long userId);
+
 	
 }

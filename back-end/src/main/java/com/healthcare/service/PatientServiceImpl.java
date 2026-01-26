@@ -174,5 +174,27 @@ public class PatientServiceImpl implements PatientService {
     }
     
     
+    
+    @Override
+    public PatientResponseDTO getPatientByUserId(Long userId) {
+
+        Patient patient = patientRepository.findByUser_Id(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Patient not found for userId : " + userId));
+
+        PatientResponseDTO dto = new PatientResponseDTO();
+
+        dto.setPatientId(patient.getPatientId());
+        dto.setPatientName(patient.getUser().getName());
+        dto.setEmail(patient.getUser().getEmail());
+
+        dto.setBloodGroup(patient.getBloodGroup());
+        dto.setGender(patient.getGender());
+        dto.setFamilyHistory(patient.getFamilyHistory());
+
+        return dto;
+    }
+    
 
 }
