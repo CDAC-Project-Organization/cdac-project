@@ -1,21 +1,28 @@
-//import org.modelmapper.ModelMapper;
 
 package com.healthcare.service;
 
+import org.modelmapper.ModelMapper;
+
 import com.healthcare.dtos.ApiResponse;
+import com.healthcare.dtos.AppointmentRequestDTO;
 import com.healthcare.dtos.EditPatientRequest;
 import com.healthcare.dtos.PatientRequestDTO;
 import com.healthcare.dtos.PatientResponseDTO;
+import com.healthcare.entities.Appointment;
+import com.healthcare.entities.AppointmentStatus;
+import com.healthcare.entities.Doctor;
 import com.healthcare.entities.Patient;
 import com.healthcare.entities.User;
 import com.healthcare.entities.UserRole;
 
 import java.util.List;
 
-import org.modelmapper.ModelMapper;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.healthcare.repository.AppointmentRepository;
+import com.healthcare.repository.DoctorRepository;
 import com.healthcare.repository.PatientRepository;
 import com.healthcare.repository.UserRepository;
 
@@ -32,6 +39,8 @@ public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    private final DoctorRepository doctorRepository;
+    private final AppointmentRepository appointmentRepository;
 
     @Override
     public List<PatientResponseDTO> findAllPatients() {
@@ -126,5 +135,44 @@ public class PatientServiceImpl implements PatientService {
 
         return new ApiResponse("SUCCESS", "Patient profile updated successfully");
     }
+    
+    
+    @Override
+    public ApiResponse bookAppointment(AppointmentRequestDTO dto) {
+
+      
+        Patient patient = patientRepository.findById(dto.getPatientId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Patient not found with id : " + dto.getPatientId()));
+
+        if (!patient.getUser().getRole().equals(UserRole.ROLE_PATIENT)) {
+            throw new RuntimeException("Only patients can book appointments");
+        }
+
+        
+        Doctor doctor = doctorRepository.findById(dto.getDoctorId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Doctor not found with id : " + dto.getDoctorId()));
+
+        
+        Appointment appointment = new Appointment();
+        appointment.setDoctor(doctor);
+        appointment.setPatient(patient);
+        appointment.setAppointmentDate(dto.getAppointmentDate());
+        appointment.setStartTime(dto.getStartTime());
+        appointment.setEndTime(dto.getEndTime());
+        appointment.setStatus(AppointmentStatus.BOOKED);
+
+        appointmentRepository.save(appointment);
+
+        return new ApiResponse(
+                "Success",
+                "Appointment booked successfully with id : " + appointment.getId()
+        );
+    }
+    
+    
 
 }

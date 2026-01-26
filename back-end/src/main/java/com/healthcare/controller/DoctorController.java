@@ -1,7 +1,6 @@
 package com.healthcare.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.healthcare.dtos.ApiResponse;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.EditDoctorRequest;
-import com.healthcare.entities.Doctor;
 import com.healthcare.service.DoctorService;
 
 import jakarta.validation.Valid;

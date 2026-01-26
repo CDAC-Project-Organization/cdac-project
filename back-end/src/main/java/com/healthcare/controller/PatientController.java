@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.healthcare.dtos.ApiResponse;
+import com.healthcare.dtos.AppointmentRequestDTO;
+import com.healthcare.dtos.DoctorAvailabilityResponse;
 import com.healthcare.dtos.EditPatientRequest;
 import com.healthcare.dtos.PatientRequestDTO;
 import com.healthcare.dtos.PatientResponseDTO;
+import com.healthcare.service.AppointmentService;
 import com.healthcare.service.PatientService;
 
 import jakarta.validation.Valid;
@@ -29,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class PatientController {
 
     private final PatientService patientService;
+    private final AppointmentService appointmentService;
 
     
     @GetMapping("/AllPatients")
@@ -65,5 +69,21 @@ public class PatientController {
     ApiResponse response = patientService.editPatientProfile(patientId, request);
     return ResponseEntity.ok(response);
 }
+    
+    @GetMapping("/doctors/{doctorId}/available-slots")
+    public ResponseEntity<DoctorAvailabilityResponse> getAvailableSlots(
+            @PathVariable Long doctorId) {
+
+        return ResponseEntity.ok(
+                appointmentService.getAvailableSlotsForDoctor(doctorId)
+        );
+    }
+    
+    @PostMapping("/bookAppointment")
+    public ResponseEntity<ApiResponse> bookAppointment(
+            @RequestBody AppointmentRequestDTO dto) {
+
+        return ResponseEntity.ok(patientService.bookAppointment(dto));
+    }
 
 }
