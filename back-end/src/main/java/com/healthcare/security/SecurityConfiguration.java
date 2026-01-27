@@ -1,5 +1,7 @@
 package com.healthcare.security;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +13,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,15 +31,15 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
             .authorizeHttpRequests(request -> request
 
-                /* ===================== PUBLIC ===================== */
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
@@ -45,11 +50,21 @@ public class SecurityConfiguration {
                     "/doctor/findAllDoctors"
                 ).permitAll()
 
-                /* ===================== PATIENT ===================== */
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/doctor/holiday/**"
+                ).hasAuthority("ROLE_DOCTOR")
+
+                .requestMatchers(
+                    "/doctor/edit-profile",
+                    "/doctor/by-user",
+                    "/Appointments/doctor/**"
+                ).hasAuthority("ROLE_DOCTOR")
+
                 .requestMatchers(
                     "/patient/edit-profile/**",
                     "/patient/bookAppointment",
-                    "/patient/doctors/*/available-slots", // ✅ FIXED
+                    "/patient/doctors/*/available-slots",
                     "/patient/byUser",
                     "/Appointments/patient/**"
                 ).hasAuthority("ROLE_PATIENT")
@@ -57,9 +72,8 @@ public class SecurityConfiguration {
                 .requestMatchers(
                     HttpMethod.POST,
                     "/Appointments/cancel/**"
-                ).hasAuthority("ROLE_PATIENT")
+                ).hasAnyAuthority("ROLE_DOCTOR", "ROLE_PATIENT")
 
-                /* ===================== ADMIN ===================== */
                 .requestMatchers(
                     "/patient/AllPatients",
                     "/patient/**",
@@ -72,28 +86,29 @@ public class SecurityConfiguration {
                     "/Appointments/allAppointments"
                 ).hasAuthority("ROLE_ADMIN")
 
-                /* ===================== DOCTOR ===================== */
-                .requestMatchers(
-                    "/doctor/edit-profile",
-                    "/doctor/by-user",
-                    "/Appointments/doctor/**"
-                ).hasAuthority("ROLE_DOCTOR")
-
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/Appointments/cancel/**"
-                ).hasAuthority("ROLE_DOCTOR")
-
-                /* ===================== DEFAULT ===================== */
                 .anyRequest().authenticated()
             )
-
             .addFilterBefore(
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class
             );
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 
     @Bean
