@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -7,45 +8,15 @@ const Login = () => {
   const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
 
-  // Initialize temporary users
-  useEffect(() => {
-    if (!localStorage.getItem("tempUsers")) {
-      const tempUsers = [
-        {
-          id: "1",
-          email: "admin@123.com",
-          password: "123",
-          role: "admin",
-          name: "Admin User"
-        },
-        {
-          id: "2",
-          email: "patient@123.com",
-          password: "123",
-          role: "patient",
-          name: "John Patient"
-        },
-        {
-          id: "3",
-          email: "doctor@123.com",
-          password: "123",
-          role: "doctor",
-          name: "Dr. Smith"
-        }
-      ];
-      localStorage.setItem("tempUsers", JSON.stringify(tempUsers));
-    }
-  }, []);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setLoginError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.email.trim() || !formData.password.trim()) {
       setLoginError("Please enter both email and password");
       return;
@@ -53,56 +24,127 @@ const Login = () => {
 
     setIsSubmitting(true);
     setLoginError("");
-    
-    setTimeout(() => {
-      const tempUsers = JSON.parse(localStorage.getItem("tempUsers")) || [];
-      const user = tempUsers.find(
-        u => u.email === formData.email && u.password === formData.password
-      );
-      
-      if (user) {
-        const { password, ...userWithoutPassword } = user;
-        localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
-        localStorage.setItem("isAuthenticated", "true");
-        
-        if (user.role === "admin") {
+
+    try {
+      // Backend API call for login
+      const response = await axios.post("http://localhost:8080/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log("Login Response:", response.data);
+
+      // Parse response from backend
+      const { token, role, userId, message, status } = response.data;
+
+      if (status === "SUCCESS") {
+        // Create user object from backend response
+        const user = {
+          id: userId,
+          email: formData.email,
+          role: role,
+        };
+
+        // Store authentication data in sessionStorage
+        sessionStorage.setItem("jwtToken", token);
+        sessionStorage.setItem("currentUser", JSON.stringify(user));
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userId", userId);
+        sessionStorage.setItem("userRole", role);
+
+        // Set axios default header for future requests
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        // Navigate based on user role
+        if (role === "ROLE_ADMIN") {
           navigate("/admin");
-        } else if (user.role === "patient") {
+        } else if (role === "ROLE_PATIENT") {
           navigate("/patient");
-        } else if (user.role === "doctor") {
+        } else if (role === "ROLE_DOCTOR") {
           navigate("/doctor");
+        } else {
+          console.warn("Unknown role:", role);
+          navigate("/");
         }
       } else {
-        setLoginError("Invalid email or password");
+        setLoginError(message || "Login failed");
       }
-      
+    } catch (err) {
+      console.error("Login error:", err);
+
+      if (err.response) {
+        if (err.response.status === 401) {
+          setLoginError(
+            "Invalid email or password. Please check your credentials.",
+          );
+        } else if (err.response.status === 400) {
+          setLoginError("Bad request. Please check your input.");
+        } else if (err.response.status === 500) {
+          setLoginError("Server error. Please try again later.");
+        } else {
+          setLoginError(
+            err.response.data?.message || "Login failed. Please try again.",
+          );
+        }
+      } else if (err.request) {
+        setLoginError(
+          "Cannot connect to server. Please check if backend is running on http://localhost:8080",
+        );
+      } else {
+        setLoginError("An error occurred: " + err.message);
+      }
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
+  };
+
+  // Helper function to fill test credentials
+  const fillTestCredentials = (email, password) => {
+    setFormData({ email, password });
   };
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
+    <div
+      style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
+    >
+      <nav
+        className="navbar navbar-expand-lg navbar-dark fixed-top"
+        style={{ backgroundColor: "#48b575" }}
+      >
         <div className="container">
-          <a className="navbar-brand fw-bold fs-4" href="/" style={{ color: "#ffffff" }}>
+          <a
+            className="navbar-brand fw-bold fs-4"
+            href="/"
+            style={{ color: "#ffffff" }}
+          >
             E-MED
           </a>
-
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <a className="nav-link fw-medium" href="/" style={{ color: "#e8f5e9" }}>
+                <a
+                  className="nav-link fw-medium"
+                  href="/"
+                  style={{ color: "#e8f5e9" }}
+                >
                   Home
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link fw-medium" href="/login" style={{ color: "#e8f5e9" }}>
+                <a
+                  className="nav-link fw-medium"
+                  href="/login"
+                  style={{ color: "#e8f5e9" }}
+                >
                   Login
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link fw-medium" href="/signup" style={{ color: "#e8f5e9" }}>
+                <a
+                  className="nav-link fw-medium"
+                  href="/signup"
+                  style={{ color: "#e8f5e9" }}
+                >
                   Sign Up
                 </a>
               </li>
@@ -117,15 +159,22 @@ const Login = () => {
         <div className="row justify-content-center">
           <div className="col-lg-5">
             <div className="mb-4 text-center">
-              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>Login to E-MED</h2>
+              <h2 className="fw-bold mb-2" style={{ color: "#2c3e50" }}>
+                Login to E-MED
+              </h2>
               <p className="text-muted mb-0">Sign in to access your account</p>
             </div>
 
-            <div className="shadow-sm border-0 p-4 rounded-3" style={{ backgroundColor: "white" }}>
+            <div
+              className="shadow-sm border-0 p-4 rounded-3"
+              style={{ backgroundColor: "white" }}
+            >
               {loginError && (
                 <div className="alert alert-danger rounded-3 mb-4">
                   <div className="d-flex align-items-center">
-                    <span style={{ fontSize: "1.2rem", marginRight: "8px" }}>⚠️</span>
+                    <span style={{ fontSize: "1.2rem", marginRight: "8px" }}>
+                      ⚠️
+                    </span>
                     <span>{loginError}</span>
                   </div>
                 </div>
@@ -133,7 +182,11 @@ const Login = () => {
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label htmlFor="email" className="form-label fw-medium" style={{ color: '#2c3e50' }}>
+                  <label
+                    htmlFor="email"
+                    className="form-label fw-medium"
+                    style={{ color: "#2c3e50" }}
+                  >
                     Email Address
                   </label>
                   <input
@@ -146,15 +199,19 @@ const Login = () => {
                     onChange={handleChange}
                     required
                     style={{
-                      padding: '10px',
-                      border: '1px solid #e9ecef',
-                      borderRadius: '8px'
+                      padding: "10px",
+                      border: "1px solid #e9ecef",
+                      borderRadius: "8px",
                     }}
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label htmlFor="password" className="form-label fw-medium" style={{ color: '#2c3e50' }}>
+                  <label
+                    htmlFor="password"
+                    className="form-label fw-medium"
+                    style={{ color: "#2c3e50" }}
+                  >
                     Password
                   </label>
                   <input
@@ -167,9 +224,9 @@ const Login = () => {
                     onChange={handleChange}
                     required
                     style={{
-                      padding: '10px',
-                      border: '1px solid #e9ecef',
-                      borderRadius: '8px'
+                      padding: "10px",
+                      border: "1px solid #e9ecef",
+                      borderRadius: "8px",
                     }}
                   />
                 </div>
@@ -180,11 +237,11 @@ const Login = () => {
                     className="btn py-2 fw-medium"
                     disabled={isSubmitting}
                     style={{
-                      backgroundColor: '#48b575',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '1.1rem'
+                      backgroundColor: "#48b575",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "1.1rem",
                     }}
                   >
                     {isSubmitting ? (
@@ -200,34 +257,55 @@ const Login = () => {
 
                 <div className="text-center mb-3">
                   <small className="text-muted">
-                    Don't have an account?{' '}
-                    <Link to="/signup" className="fw-medium" style={{ color: '#48b575' }}>
+                    Don't have an account?{" "}
+                    <Link
+                      to="/signup"
+                      className="fw-medium"
+                      style={{ color: "#48b575" }}
+                    >
                       Sign up
                     </Link>
                   </small>
                 </div>
 
-              
-
-                {/* <div className="text-center">
-                  <Link to="/" className="fw-medium" style={{ color: '#48b575' }}>
-                    ← Back to Home
-                  </Link>
-                </div> */}
+                {/* Quick Test Buttons */}
+                <div className="text-center mt-4">
+                  <p className="text-muted small mb-2">Quick Test:</p>
+                  <div className="d-flex flex-wrap justify-content-center gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() =>
+                        fillTestCredentials("sachin@gmail.com", "sachin")
+                      }
+                    >
+                      Patient Login
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-success"
+                      onClick={() =>
+                        fillTestCredentials("admin@doclink.com", "admin123")
+                      }
+                    >
+                      Admin Login
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-info"
+                      onClick={() =>
+                        fillTestCredentials("rahul@doclink.com", "doctor123")
+                      }
+                    >
+                      Doctor Login
+                    </button>
+                  </div>
+                </div>
               </form>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      {/* <footer className="py-4 mt-5" style={{ backgroundColor: "#34495e", color: "#ecf0f1" }}>
-        <div className="container text-center">
-          <small style={{ color: "#95a5a6" }}>
-            © 2024 E-MED Healthcare. All rights reserved.
-          </small>
-        </div>
-      </footer> */}
     </div>
   );
 };

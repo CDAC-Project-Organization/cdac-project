@@ -20,17 +20,53 @@ const PatientDashboard = () => {
     slots: false,
   });
   const [error, setError] = useState(null);
+  const [patientName, setPatientName] = useState("Patient");
 
   const API_BASE_URL = "http://localhost:8080";
+  const getToken = () => sessionStorage.getItem("jwtToken");
+
   const api = axios.create({
     baseURL: API_BASE_URL,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
   });
 
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        sessionStorage.clear();
+        localStorage.clear();
+        navigate("/login");
+      }
+      return Promise.reject(error);
+    },
+  );
+
   useEffect(() => {
+    const isAuthenticated = sessionStorage.getItem("isAuthenticated");
+    const userRole = sessionStorage.getItem("userRole");
+    if (!isAuthenticated || userRole !== "ROLE_PATIENT") navigate("/login");
+
     fetchDoctors();
     fetchPatientAppointments();
-  }, []);
+
+    const token = getToken();
+    if (token) {
+      try {
+        const decoded = JSON.parse(atob(token.split(".")[1]));
+        if (decoded?.sub) {
+          const nameFromEmail = decoded.sub.split("@")[0];
+          setPatientName(
+            nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1),
+          );
+        }
+      } catch (e) {}
+    }
+  }, [navigate]);
+
   useEffect(() => {
     if (selectedDoctor) fetchAvailableSlots(selectedDoctor.doctorId);
     else {
@@ -58,7 +94,7 @@ const PatientDashboard = () => {
         ...new Set(response.data.map((doc) => doc.speciality)),
       ]);
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Error fetching doctors:", err);
       setError("Failed to load doctors");
     } finally {
       setLoading((prev) => ({ ...prev, doctors: false }));
@@ -90,7 +126,7 @@ const PatientDashboard = () => {
         `/patient/doctors/${doctorId}/available-slots`,
       );
       const data = response.data;
-      if (data.availableSlots && Array.isArray(data.availableSlots)) {
+      if (data.availableSlots?.length) {
         const grouped = {};
         data.availableSlots.forEach((slot) => {
           const startTime = slot.startTime || "00:00:00";
@@ -101,7 +137,7 @@ const PatientDashboard = () => {
           const formattedSlot = {
             display: `${hour12}:${minutes} ${ampm}`,
             date: slot.date,
-            startTime: startTime,
+            startTime,
           };
           if (!grouped[slot.date]) grouped[slot.date] = [];
           grouped[slot.date].push(formattedSlot);
@@ -183,10 +219,9 @@ const PatientDashboard = () => {
       (!selectedSpecialization ||
         doc.specialization === selectedSpecialization) &&
       (!searchLocation.trim() ||
-        (doc.clinicAddress &&
-          doc.clinicAddress
-            .toLowerCase()
-            .includes(searchLocation.toLowerCase()))),
+        doc.clinicAddress
+          ?.toLowerCase()
+          .includes(searchLocation.toLowerCase())),
   );
 
   return (
@@ -214,7 +249,7 @@ const PatientDashboard = () => {
           style={{ backgroundColor: "white" }}
         >
           <h3 className="fw-bold mb-2" style={{ color: "#2c3e50" }}>
-            Welcome, Patient!
+            Welcome, {patientName}!
           </h3>
           <p className="text-muted">Book appointments with doctors today</p>
         </div>
