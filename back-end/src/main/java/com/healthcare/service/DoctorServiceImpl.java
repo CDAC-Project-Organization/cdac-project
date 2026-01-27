@@ -13,13 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.healthcare.custom_exceptions.DuplicateResourceException;
 import com.healthcare.custom_exceptions.ResourceNotFoundException;
 import com.healthcare.dtos.ApiResponse;
+import com.healthcare.dtos.DoctorHolidayRequestDTO;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.DoctorResponseDTO;
 import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
 import com.healthcare.entities.Doctor;
+import com.healthcare.entities.DoctorHoliday;
 import com.healthcare.entities.User;
 import com.healthcare.entities.UserRole;
+import com.healthcare.repository.DoctorHolidayRepository;
 import com.healthcare.repository.DoctorRepository;
 import com.healthcare.repository.UserRepository;
 
@@ -34,6 +37,7 @@ public class DoctorServiceImpl implements DoctorService {
 	private final ModelMapper modelMapper;
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	 private final DoctorHolidayRepository doctorHolidayRepository;
 	
 	@Override
 	public List<DoctorResponseDTO> findAllDoctors() {
@@ -123,7 +127,7 @@ public class DoctorServiceImpl implements DoctorService {
 	        DoctorUserResponseDTO dto =
 	                modelMapper.map(doctor, DoctorUserResponseDTO.class);
 
-	        // Map nested User fields manually (best practice)
+	        
 	        dto.setUserId(doctor.getUser().getId());
 	        dto.setName(doctor.getUser().getName());
 	        dto.setEmail(doctor.getUser().getEmail());
@@ -131,6 +135,31 @@ public class DoctorServiceImpl implements DoctorService {
 
 	        return dto;
 	    }
+	 
+	  @Override
+	    public DoctorHoliday addDoctorHoliday(Long doctorId, DoctorHolidayRequestDTO dto) {
+		  
+		  Doctor doctor = doctorRepository.findById(doctorId)
+	                .orElseThrow(() ->
+	                        new ResourceNotFoundException("Doctor not found with id: " + doctorId)
+	                );
+
+	      
+	        if (doctorHolidayRepository
+	                .findByDoctor_DoctorIdAndHolidayDate(doctorId, dto.getHolidayDate())
+	                .isPresent()) {
+	            throw new DuplicateResourceException("Holiday already exists for this date");
+	        }
+
+	        DoctorHoliday holiday = new DoctorHoliday();
+	        holiday.setHolidayDate(dto.getHolidayDate());
+	        holiday.setReason(dto.getReason());
+	        holiday.setDoctor(doctor);
+
+	        return doctorHolidayRepository.save(holiday);
+	    }
+	       
+	  
 		
 	
 
