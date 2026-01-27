@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PatientNavbar from './PatientNavbar';
 
+<<<<<<< HEAD
 function FeedbackPage() {
   const [rating, setRating] = useState(5);
   const [comments, setComments] = useState("");
@@ -45,10 +46,22 @@ function FeedbackPage() {
       setLoading(false);
     }, 500);
   }, []);
+=======
+const FEEDBACK_API_URL = "http://localhost:8080/api/feedback";
+const DEFAULT_RATING = 5;
+
+function FeedbackPage({ appointmentId }) {
+  const [rating, setRating] = useState(DEFAULT_RATING);
+  const [comments, setComments] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+>>>>>>> cd55e557bac02267cff35b12cff7f51bd3fddc4f
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+<<<<<<< HEAD
     if (!selectedDoctor) {
       alert("Please select a doctor");
       return;
@@ -69,6 +82,27 @@ function FeedbackPage() {
       setSelectedDoctor("");
     } catch {
       alert("Failed to submit feedback");
+=======
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      await axios.post(FEEDBACK_API_URL, {
+        appointment_id: appointmentId,
+        rating,
+        comments: comments.trim(),
+      });
+
+      setSuccess("Feedback submitted successfully.");
+      setRating(DEFAULT_RATING);
+      setComments("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to submit feedback. Please try again.");
+    } finally {
+      setLoading(false);
+>>>>>>> cd55e557bac02267cff35b12cff7f51bd3fddc4f
     }
   };
 
@@ -94,6 +128,7 @@ function FeedbackPage() {
   return (
     <div className="min-vh-100 bg-light">
       <PatientNavbar />
+<<<<<<< HEAD
       <div style={{ paddingTop: "80px" }}></div>
       
       <div className="container py-5">
@@ -161,10 +196,43 @@ function FeedbackPage() {
                     <label className="form-label fw-medium">
                       Rating <span className="text-danger">*</span>
                     </label>
+=======
+
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-12 col-sm-10 col-md-6 col-lg-4">
+            <div className="card shadow-sm border-0">
+              <div className="card-body p-4">
+
+                <h4 className="text-center fw-semibold mb-2">
+                  Appointment Feedback
+                </h4>
+                <p className="text-center text-muted mb-4">
+                  Please share your experience
+                </p>
+
+                {error && (
+                  <div className="alert alert-danger py-2">
+                    {error}
+                  </div>
+                )}
+
+                {success && (
+                  <div className="alert alert-success py-2">
+                    {success}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit}>
+                  {/* Rating */}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">Rating</label>
+>>>>>>> cd55e557bac02267cff35b12cff7f51bd3fddc4f
                     <select
                       className="form-select"
                       value={rating}
                       onChange={(e) => setRating(Number(e.target.value))}
+<<<<<<< HEAD
                       required
                     >
                       <option value="1">⭐ 1 - Poor</option>
@@ -172,11 +240,22 @@ function FeedbackPage() {
                       <option value="3">⭐⭐⭐ 3 - Good</option>
                       <option value="4">⭐⭐⭐⭐ 4 - Very Good</option>
                       <option value="5">⭐⭐⭐⭐⭐ 5 - Excellent</option>
+=======
+                      disabled={loading}
+                      required
+                    >
+                      <option value={1}>⭐ 1 - Poor</option>
+                      <option value={2}>⭐⭐ 2 - Fair</option>
+                      <option value={3}>⭐⭐⭐ 3 - Good</option>
+                      <option value={4}>⭐⭐⭐⭐ 4 - Very Good</option>
+                      <option value={5}>⭐⭐⭐⭐⭐ 5 - Excellent</option>
+>>>>>>> cd55e557bac02267cff35b12cff7f51bd3fddc4f
                     </select>
                   </div>
 
                   {/* Comments */}
                   <div className="mb-4">
+<<<<<<< HEAD
                     <label className="form-label fw-medium">Comments (Optional)</label>
                     <textarea
                       className="form-control"
@@ -184,11 +263,22 @@ function FeedbackPage() {
                       placeholder="Share your experience with this doctor..."
                       value={comments}
                       onChange={(e) => setComments(e.target.value)}
+=======
+                    <label className="form-label fw-medium">Comments</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="Optional"
+                      value={comments}
+                      onChange={(e) => setComments(e.target.value)}
+                      disabled={loading}
+>>>>>>> cd55e557bac02267cff35b12cff7f51bd3fddc4f
                     />
                   </div>
 
                   {/* Submit */}
                   <div className="d-grid">
+<<<<<<< HEAD
                     <button type="submit" className="btn btn-primary">
                       Submit Feedback
                     </button>
@@ -210,10 +300,22 @@ function FeedbackPage() {
                   </div>
                 </div>
               )}
+=======
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={loading}
+                    >
+                      {loading ? "Submitting..." : "Submit Feedback"}
+                    </button>
+                  </div>
+                </form>
+
+              </div>
+>>>>>>> cd55e557bac02267cff35b12cff7f51bd3fddc4f
             </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
