@@ -6,11 +6,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.healthcare.dtos.LoginRequest;
 import com.healthcare.dtos.LoginResponse;
-import com.healthcare.dtos.SignupRequestDTO;
-import com.healthcare.dtos.SignupResponseDTO;
 import com.healthcare.service.AuthService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -30,14 +27,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody @Valid SignupRequestDTO request) {
-
-        SignupResponseDTO response = authService.signup(request);
-        return ResponseEntity.ok(response);
-    }
-
-
    
     
     

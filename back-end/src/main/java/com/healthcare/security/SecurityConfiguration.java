@@ -4,70 +4,101 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Configuration // To declare a java config class (equivalent to bean config xml file)
-@EnableWebSecurity // to enable spring security
-@EnableMethodSecurity // optional to add method level authorization rules
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
-@Slf4j
 public class SecurityConfiguration {
-	// ctor based D.I
-	private final PasswordEncoder passwordEncoder;
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-	
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		
-		 http.csrf(csrf -> csrf.disable());
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-		    http.sessionManagement(session ->
-		            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http
+            .csrf(csrf -> csrf.disable())
 
-		    http.authorizeHttpRequests(request ->
-		            request
-		                .requestMatchers(
-		                        "/v3/api-docs/**",
-		                        "/swagger-ui/**",
-		                        "/auth/**",
-		                        "/patient/addPatient"
-		                ).permitAll()
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
 
-		                .requestMatchers(HttpMethod.GET, "/doctors").permitAll()
-		                .requestMatchers(HttpMethod.GET, "/patients").hasRole("ADMIN")
-		                .requestMatchers(HttpMethod.POST, "/appointments").hasRole("PATIENT")
-		                .requestMatchers(HttpMethod.GET, "/patients/{userId}").hasRole("ADMIN")
-		                .requestMatchers("/doctor/AddDoctors").hasRole("ADMIN")
-		                .requestMatchers(HttpMethod.POST,
-		                        "/appointments/mark-complete-with-tests").hasRole("DOCTOR")
+            .authorizeHttpRequests(request -> request
 
-		                .anyRequest().authenticated()
-		    );
+                /* ===================== PUBLIC ===================== */
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/auth/**",
+                    "/patient/addPatient",
+                    "/admin/create",
+                    "/admin/byUser",
+                    "/doctor/findAllDoctors"
+                ).permitAll()
 
-		    http.addFilterBefore(
-		            jwtAuthenticationFilter,
-		            org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
-		    );
+                /* ===================== PATIENT ===================== */
+                .requestMatchers(
+                    "/patient/edit-profile/**",
+                    "/patient/bookAppointment",
+                    "/patient/doctors/*/available-slots", // ✅ FIXED
+                    "/patient/byUser",
+                    "/Appointments/patient/**"
+                ).hasAuthority("ROLE_PATIENT")
 
-		    return http.build();
-		
-	}
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/Appointments/cancel/**"
+                ).hasAuthority("ROLE_PATIENT")
 
-	// Configure AuthManager as spring bean
-	@Bean
-	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-		return config.getAuthenticationManager();
-	}
+                /* ===================== ADMIN ===================== */
+                .requestMatchers(
+                    "/patient/AllPatients",
+                    "/patient/**",
+                    "/doctor/AddDoctors",
+                    "/doctor/**"
+                ).hasAuthority("ROLE_ADMIN")
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/Appointments/allAppointments"
+                ).hasAuthority("ROLE_ADMIN")
+
+                /* ===================== DOCTOR ===================== */
+                .requestMatchers(
+                    "/doctor/edit-profile",
+                    "/doctor/by-user",
+                    "/Appointments/doctor/**"
+                ).hasAuthority("ROLE_DOCTOR")
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/Appointments/cancel/**"
+                ).hasAuthority("ROLE_DOCTOR")
+
+                /* ===================== DEFAULT ===================== */
+                .anyRequest().authenticated()
+            )
+
+            .addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 }

@@ -1,11 +1,13 @@
 package com.healthcare.exception_handler;
 
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +47,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)   // 409
                 .body(new ApiResponse("Failed", ex.getMessage()));
+    }
+    
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<String> handleBadCredentials() {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Invalid username or password");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDenied() {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("You do not have permission to access this resource");
     }
 
     

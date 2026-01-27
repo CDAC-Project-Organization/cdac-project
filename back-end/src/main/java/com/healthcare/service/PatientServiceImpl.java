@@ -69,6 +69,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public ApiResponse addPatient(PatientRequestDTO dto) {
 
+        System.out.println(dto);
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateResourceException("Email already exists");
         }
@@ -77,36 +78,21 @@ public class PatientServiceImpl implements PatientService {
             throw new DuplicateResourceException("Phone already exists");
         }
 
-<<<<<<< HEAD
         User user = modelMapper.map(dto, User.class);
         user.setRole(UserRole.ROLE_PATIENT);
         user.setPassword(
                 passwordEncoder.encode(dto.getPassword())
         );
         userRepository.save(user);
-=======
-        // ✅ Create User manually (do NOT use modelMapper here)
-        User user = new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
-        user.setPhone(dto.getPhone());
-        user.setRole(UserRole.ROLE_PATIENT); // ✅ ALWAYS PATIENT
-        user.setDob(dto.getDob());
-        User savedUser = userRepository.save(user);
->>>>>>> b549b52485ec9151b99a08e9942fba3b20c1bf57
 
-        // ✅ Create Patient
         Patient patient = modelMapper.map(dto, Patient.class);
-        patient.setUser(savedUser);
+        patient.setUser(user);
         patientRepository.save(patient);
 
         return new ApiResponse(
-                "SUCCESS",
-                "Patient added successfully with id : " + patient.getPatientId()
-        );
+                "Success",
+                "Patient added successfully with id : " + patient.getPatientId());
     }
-
 
     @Override
     public ApiResponse editPatientProfile(Long patientId, EditPatientRequest request) {

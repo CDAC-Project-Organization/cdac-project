@@ -1,6 +1,7 @@
 package com.healthcare.controller;
 
 import com.healthcare.dtos.AdminProfileDTO;
+import com.healthcare.dtos.CreateAdminRequest;
 import com.healthcare.security.UserPrincipal;
 import com.healthcare.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +30,14 @@ public class AdminController {
         return ResponseEntity.ok(
                 adminService.getAdminByUserId(userId)
         );
+        
+    }
+    
+    @PostMapping("/create")
+    public ResponseEntity<String> createAdmin(
+            @RequestBody CreateAdminRequest request) {
+
+        adminService.createAdmin(request);
+        return ResponseEntity.ok("Admin created successfully");
     }
 }
