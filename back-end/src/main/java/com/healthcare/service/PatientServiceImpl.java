@@ -17,7 +17,7 @@ import com.healthcare.entities.UserRole;
 
 import java.util.List;
 
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +41,7 @@ public class PatientServiceImpl implements PatientService {
     private final ModelMapper modelMapper;
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<PatientResponseDTO> findAllPatients() {
@@ -79,6 +80,9 @@ public class PatientServiceImpl implements PatientService {
 
         User user = modelMapper.map(dto, User.class);
         user.setRole(UserRole.ROLE_PATIENT);
+        user.setPassword(
+                passwordEncoder.encode(dto.getPassword())
+        );
         userRepository.save(user);
 
         Patient patient = modelMapper.map(dto, Patient.class);

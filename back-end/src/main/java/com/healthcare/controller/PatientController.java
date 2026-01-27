@@ -3,6 +3,7 @@ package com.healthcare.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import com.healthcare.dtos.DoctorAvailabilityResponse;
 import com.healthcare.dtos.EditPatientRequest;
 import com.healthcare.dtos.PatientRequestDTO;
 import com.healthcare.dtos.PatientResponseDTO;
+import com.healthcare.security.UserPrincipal;
 import com.healthcare.service.AppointmentService;
 import com.healthcare.service.PatientService;
 
@@ -86,9 +88,16 @@ public class PatientController {
         return ResponseEntity.ok(patientService.bookAppointment(dto));
     }
     
-    @GetMapping("/byUser/{userId}")
-    public ResponseEntity<PatientResponseDTO> getPatientByUserId(
-            @PathVariable Long userId) {
+    @GetMapping("/byUser")
+    public ResponseEntity<PatientResponseDTO> getPatientForLoggedInUser() {
+
+        UserPrincipal principal =
+                (UserPrincipal) SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+                        .getPrincipal();
+
+        Long userId = principal.getUserId();
 
         return ResponseEntity.ok(
                 patientService.getPatientByUserId(userId)

@@ -6,6 +6,7 @@ package com.healthcare.service;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class DoctorServiceImpl implements DoctorService {
 	private final DoctorRepository doctorRepository;
 	private final ModelMapper modelMapper;
 	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
 	
 	@Override
 	public List<DoctorResponseDTO> findAllDoctors() {
@@ -68,7 +70,9 @@ public class DoctorServiceImpl implements DoctorService {
 	        
 	        User user = modelMapper.map(dto, User.class);
 	        user.setRole(UserRole.ROLE_DOCTOR);
-
+	        user.setPassword(
+	                passwordEncoder.encode(dto.getPassword())
+	        );
 	        userRepository.save(user);
 
 	        Doctor doctor = modelMapper.map(dto, Doctor.class);

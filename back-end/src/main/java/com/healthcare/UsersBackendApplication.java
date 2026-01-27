@@ -7,6 +7,8 @@ import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication // @Configuration : bean config xml file
 public class UsersBackendApplication {
@@ -25,6 +27,11 @@ public class UsersBackendApplication {
 //		//2. DO not transfer null values from src->dest
 		.setPropertyCondition(Conditions.isNotNull());		
 		return mapper;
+	}
+	
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 
 }

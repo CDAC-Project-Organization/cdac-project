@@ -6,6 +6,8 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Data
 public class DoctorRequestDTO {
 
@@ -40,10 +42,12 @@ public class DoctorRequestDTO {
 
     @NotNull(message = "Experience is required")
     private Integer experience;
-
+    
+    
     @NotNull(message = "Start time is required")
     private LocalTime startTime;
-
+    
+    
     @NotNull(message = "End time is required")
     private LocalTime endTime;
 }

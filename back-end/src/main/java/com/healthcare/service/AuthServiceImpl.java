@@ -1,53 +1,50 @@
 package com.healthcare.service;
 
-import java.util.Optional;
-
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.healthcare.dtos.LoginRequest;
 import com.healthcare.dtos.LoginResponse;
-import com.healthcare.entities.User;
-import com.healthcare.repository.UserRepository;
+import com.healthcare.security.JwtUtils;
+import com.healthcare.security.UserPrincipal;
 
 import lombok.RequiredArgsConstructor;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
 
     @Override
     public LoginResponse login(LoginRequest request) {
+    	
 
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                request.getEmail(),
+                                request.getPassword()
+                        )
+                );
 
-        if (userOpt.isEmpty()) {
-            return new LoginResponse(
-                "FAILED",
-                "Invalid email or password",
-                null,
-                null
-            );
-        }
+        UserPrincipal principal =
+                (UserPrincipal) authentication.getPrincipal();
 
-        User user = userOpt.get();
-
-        // Plain-text comparison (NO SECURITY as requested)
-        if (!user.getPassword().equals(request.getPassword())) {
-            return new LoginResponse(
-                "FAILED",
-                "Invalid email or password",
-                null,
-                null
-            );
-        }
-
+        String token = jwtUtils.generateToken(principal);
+        	
+        System.out.println(principal.getEmail());
         return new LoginResponse(
-            "SUCCESS",
-            "Login successful",
-            user.getRole().name(),
-            user.getId()
+                "SUCCESS",
+                "Login successful",
+                principal.getUserRole(),
+                principal.getUserId(),
+                token
         );
     }
 }

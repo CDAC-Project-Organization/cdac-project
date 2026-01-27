@@ -2,6 +2,7 @@ package com.healthcare.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import com.healthcare.dtos.ApiResponse;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
+import com.healthcare.security.UserPrincipal;
 import com.healthcare.service.DoctorService;
 
 import jakarta.validation.Valid;
@@ -67,15 +69,22 @@ public class DoctorController {
 	 }
 
 	
-	  @GetMapping("/by-user/{userId}")
-	    public ResponseEntity<DoctorUserResponseDTO> getDoctorByUserId(
-	            @PathVariable Long userId) {
+	 @GetMapping("/by-user")
+	 public ResponseEntity<DoctorUserResponseDTO> getDoctorForLoggedInUser() {
 
-	        DoctorUserResponseDTO response =
-	                doctorService.getDoctorByUserId(userId);
+	     UserPrincipal principal =
+	             (UserPrincipal) SecurityContextHolder
+	                     .getContext()
+	                     .getAuthentication()
+	                     .getPrincipal();
 
-	        return ResponseEntity.ok(response);
-	    }
+	     Long userId = principal.getUserId();
+
+	     DoctorUserResponseDTO response =
+	             doctorService.getDoctorByUserId(userId);
+
+	     return ResponseEntity.ok(response);
+	 }
 
 	
 	
