@@ -24,7 +24,7 @@ const PatientNavbar = () => {
                     className="fw-bold fs-4" 
                     style={{ color: "#ffffff" }}
                 >
-                    E-MED Patient
+                    DocLink Patient
                 </Navbar.Brand>
 
                 <Navbar.Toggle aria-controls="patientNavbar" />
