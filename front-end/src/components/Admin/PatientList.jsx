@@ -1,3 +1,4 @@
+// src/components/admin/PatientList.jsx
 import React, { useState, useEffect } from "react";
 import {
   Table,
@@ -10,9 +11,11 @@ import {
   Modal,
   Row,
   Col,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // AXIOS IMPORT
+import axios from "axios";
 import AdminNavbar from "./AdminNavbar";
 
 const PatientList = () => {
@@ -23,109 +26,212 @@ const PatientList = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [showAppointmentsModal, setShowAppointmentsModal] = useState(false);
-
-  // AXIOS CONFIGURATION
-  const API_BASE_URL = "http://localhost:8080";
-  const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: { "Content-Type": "application/json" },
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    variant: "success", // 'success' or 'danger'
   });
 
   useEffect(() => {
     fetchPatients();
   }, []);
 
-  // AXIOS GET REQUEST FOR PATIENTS
+  // Fetch patients from API - Similar to DoctorList
   const fetchPatients = async () => {
-    setLoading(true);
     try {
-      const response = await api.get("/patient/AllPatients"); // AXIOS GET
-      setPatients(
-        response.data.map((p) => ({
-          id: p.patientId,
-          name: p.patientName,
-          email: p.email,
-          gender: p.gender === "MALE" ? "Male" : "Female",
-          bloodGroup: p.bloodGroup,
-          familyHistory: p.familyHistory,
-        })),
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(
+        "http://localhost:8080/patient/AllPatients",
       );
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load patients");
+
+      // Assuming the response structure is similar to doctors
+      // Check the actual response structure in console
+      console.log("Patients API Response:", response.data);
+
+      // Transform the data based on actual response structure
+      const formattedPatients = Array.isArray(response.data)
+        ? response.data.map((p) => ({
+            id: p.patientId || p.id,
+            name: p.patientName || p.name,
+            email: p.email,
+            gender:
+              p.gender === "MALE"
+                ? "Male"
+                : p.gender === "FEMALE"
+                  ? "Female"
+                  : p.gender || "N/A",
+            bloodGroup: p.bloodGroup || "N/A",
+            familyHistory:
+              p.familyHistory ||
+              p.medicalHistory ||
+              "No family history recorded",
+            phone: p.phone || p.contactNumber || "N/A",
+            age: p.age || "N/A",
+          }))
+        : [];
+
+      setPatients(formattedPatients);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      setError(error.response?.data?.message || "Failed to fetch patients");
+      setToast({
+        show: true,
+        message: "Failed to fetch patients",
+        variant: "danger",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // AXIOS GET REQUEST FOR APPOINTMENTS
+  // Fetch appointments from API
   const fetchAppointments = async () => {
     try {
-      const response = await api.get("/Appointments/allAppointments"); // AXIOS GET
-      setAppointments(response.data);
-    } catch (err) {
-      alert("Failed to load appointments");
+      const response = await axios.get(
+        "http://localhost:8080/Appointments/allAppointments",
+      );
+      console.log("Appointments API Response:", response.data);
+      setAppointments(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      setToast({
+        show: true,
+        message: "Failed to fetch appointments",
+        variant: "danger",
+      });
     }
   };
 
-  // AXIOS DELETE REQUEST
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`Delete patient: ${name}?`)) {
+  // Handle patient deletion
+  const handleDelete = async (patientId, patientName) => {
+    if (
+      window.confirm(
+        `Are you sure you want to delete patient: ${patientName}? This action cannot be undone.`,
+      )
+    ) {
       try {
-        await api.delete(`/patient/${id}`); // AXIOS DELETE
-        setPatients(patients.filter((p) => p.id !== id));
-        alert("Patient deleted!");
-      } catch (err) {
-        alert("Delete failed");
+        const response = await axios.delete(
+          `http://localhost:8080/patient/${patientId}`,
+        );
+
+        if (response.data.status === "SUCCESS" || response.data.success) {
+          // Remove patient from state
+          setPatients(patients.filter((patient) => patient.id !== patientId));
+
+          // Show success toast
+          setToast({
+            show: true,
+            message: `Patient ${patientName} deleted successfully`,
+            variant: "success",
+          });
+        } else {
+          setToast({
+            show: true,
+            message: response.data.message || "Failed to delete patient",
+            variant: "danger",
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting patient:", error);
+
+        if (error.response) {
+          setToast({
+            show: true,
+            message: error.response.data.message || "Failed to delete patient",
+            variant: "danger",
+          });
+        } else if (error.request) {
+          setToast({
+            show: true,
+            message: "Network error. Please check your connection.",
+            variant: "danger",
+          });
+        } else {
+          setToast({
+            show: true,
+            message: "An error occurred. Please try again.",
+            variant: "danger",
+          });
+        }
       }
     }
   };
 
   const filteredPatients = patients.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.email.toLowerCase().includes(search.toLowerCase()),
+    (patient) =>
+      patient.name?.toLowerCase().includes(search.toLowerCase()) ||
+      patient.email?.toLowerCase().includes(search.toLowerCase()) ||
+      patient.phone?.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div
       style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
     >
+      {/* Navbar */}
       <AdminNavbar />
+
+      {/* Toast Notification */}
+      <ToastContainer
+        position="top-end"
+        className="p-3"
+        style={{ zIndex: 9999, marginTop: "80px" }}
+      >
+        <Toast
+          show={toast.show}
+          onClose={() => setToast({ ...toast, show: false })}
+          delay={5000}
+          autohide
+          bg={toast.variant}
+        >
+          <Toast.Header closeButton>
+            <strong className="me-auto">
+              {toast.variant === "success" ? "Success" : "Error"}
+            </strong>
+          </Toast.Header>
+          <Toast.Body className="text-white">{toast.message}</Toast.Body>
+        </Toast>
+      </ToastContainer>
 
       <div style={{ paddingTop: "80px" }}></div>
 
       <div className="container py-4">
-        {error && (
-          <Alert
-            variant="danger"
-            className="mb-3"
-            onClose={() => setError(null)}
-            dismissible
-          >
-            {error}
-          </Alert>
-        )}
-
+        {/* Page Header */}
         <div className="mb-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h2 className="fw-bold mb-2">Patient Management</h2>
-              <p className="text-muted mb-0">View and manage patients</p>
+              <h2 className="fw-bold mb-2" style={{ color: "#2c3e50" }}>
+                Patient Management
+              </h2>
+              <p className="text-muted mb-0">
+                View and manage all registered patients
+              </p>
             </div>
             <div className="d-flex gap-2">
               <Button
-                variant="info"
                 onClick={() => {
                   fetchAppointments();
                   setShowAppointmentsModal(true);
                 }}
+                className="rounded-pill px-4 fw-medium"
+                style={{
+                  backgroundColor: "#3498db",
+                  color: "white",
+                  border: "none",
+                }}
               >
-                View Appointments
+                📅 View Appointments
               </Button>
               <Button
-                variant="primary"
                 onClick={fetchPatients}
                 disabled={loading}
+                className="rounded-pill px-4 fw-medium"
+                style={{
+                  backgroundColor: "#48b575",
+                  color: "white",
+                  border: "none",
+                }}
               >
                 {loading ? (
                   <>
@@ -140,54 +246,93 @@ const PatientList = () => {
           </div>
         </div>
 
+        {/* Stats and Search Card */}
         <Row className="mb-4">
           <Col md={6} lg={3}>
-            <Card className="shadow-sm border-0 h-100">
+            <Card
+              className="shadow-sm border-0 h-100"
+              style={{ borderRadius: "16px" }}
+            >
               <Card.Body className="p-4">
-                <h5 className="text-muted mb-1">Total Patients</h5>
-                <h3 className="mb-0 text-primary">
+                <h5 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
+                  Total Patients
+                </h5>
+                <h3 className="mb-0" style={{ color: "#48b575" }}>
                   {loading ? <Spinner size="sm" /> : patients.length}
                 </h3>
               </Card.Body>
             </Card>
           </Col>
           <Col md={6} lg={3}>
-            <Card className="shadow-sm border-0 h-100">
+            <Card
+              className="shadow-sm border-0 h-100"
+              style={{ borderRadius: "16px" }}
+            >
               <Card.Body className="p-4">
-                <h5 className="text-muted mb-1">Total Appointments</h5>
-                <h3 className="mb-0 text-warning">{appointments.length}</h3>
+                <h5 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
+                  Total Appointments
+                </h5>
+                <h3 className="mb-0" style={{ color: "#3498db" }}>
+                  {appointments.length}
+                </h3>
               </Card.Body>
             </Card>
           </Col>
           <Col md={12} lg={6}>
-            <Card className="shadow-sm border-0 h-100">
+            <Card
+              className="shadow-sm border-0 h-100"
+              style={{ borderRadius: "16px" }}
+            >
               <Card.Body className="p-4">
-                <h5 className="fw-bold mb-1">Search</h5>
+                <h5 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
+                  Search Patients
+                </h5>
                 <InputGroup>
-                  <InputGroup.Text>🔍</InputGroup.Text>
+                  <InputGroup.Text
+                    style={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e9ecef",
+                    }}
+                  >
+                    🔍
+                  </InputGroup.Text>
                   <Form.Control
-                    placeholder="Search patients by name or email..."
+                    placeholder="Search by name, email, or phone number..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
+                  {search && (
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setSearch("")}
+                    >
+                      Clear
+                    </Button>
+                  )}
                 </InputGroup>
               </Card.Body>
             </Card>
           </Col>
         </Row>
 
-        <Card className="shadow-sm border-0">
+        {/* Patients Table */}
+        <Card className="shadow-sm border-0" style={{ borderRadius: "16px" }}>
           <Card.Header className="bg-white d-flex justify-content-between align-items-center">
-            <h5 className="fw-bold mb-0">Patients List</h5>
+            <h5 className="fw-bold mb-0" style={{ color: "#2c3e50" }}>
+              Patients List
+            </h5>
             <small className="text-muted">
-              {filteredPatients.length} of {patients.length} patients
+              {filteredPatients.length} of {patients.length} patients shown
             </small>
           </Card.Header>
           <Card.Body className="p-4">
             {loading ? (
               <div className="text-center py-5">
-                <Spinner variant="primary" />
-                <p className="mt-3 text-muted">Loading...</p>
+                <div
+                  className="spinner-border"
+                  style={{ color: "#48b575" }}
+                ></div>
+                <p className="mt-3 text-muted">Loading patients...</p>
               </div>
             ) : patients.length === 0 ? (
               <div className="text-center py-5">
@@ -198,7 +343,7 @@ const PatientList = () => {
               </div>
             ) : filteredPatients.length === 0 ? (
               <div className="text-center py-5">
-                <p className="text-muted">
+                <p className="mt-3 text-muted">
                   No patients found matching "{search}"
                 </p>
                 <Button
@@ -210,51 +355,76 @@ const PatientList = () => {
               </div>
             ) : (
               <div className="table-responsive">
-                <Table hover className="align-middle mb-0">
+                <Table hover className="align-middle">
                   <thead className="table-light">
                     <tr>
                       <th>ID</th>
-                      <th>Patient</th>
+                      <th>Patient Name</th>
+                      <th>Email</th>
+                      <th>Gender</th>
+                      <th>Age</th>
+                      <th>Blood Group</th>
                       <th>Contact</th>
-                      <th>Medical Details</th>
-                      <th>Actions</th>
+                      <th className="text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPatients.map((p) => (
-                      <tr key={p.id}>
-                        <td>#{p.id}</td>
+                    {filteredPatients.map((patient, index) => (
+                      <tr key={patient.id || index}>
                         <td>
-                          <div className="fw-semibold">{p.name}</div>
-                          <small className="text-muted">{p.gender}</small>
+                          <div className="fw-semibold">#{patient.id}</div>
                         </td>
                         <td>
-                          <div className="text-muted">{p.email}</div>
+                          <div className="fw-semibold">{patient.name}</div>
                         </td>
                         <td>
-                          {p.bloodGroup && (
-                            <div className="mb-1">
-                              <span className="badge bg-info">
-                                {p.bloodGroup.replace("_", " ")}
-                              </span>
-                            </div>
-                          )}
-                          {p.familyHistory && (
-                            <small className="text-muted d-block">
-                              {p.familyHistory.length > 50
-                                ? `${p.familyHistory.substring(0, 50)}...`
-                                : p.familyHistory}
-                            </small>
-                          )}
+                          <div className="text-muted">{patient.email}</div>
                         </td>
                         <td>
-                          <Button
-                            size="sm"
-                            variant="outline-danger"
-                            onClick={() => handleDelete(p.id, p.name)}
+                          <span
+                            className={`badge ${patient.gender === "Male" ? "bg-primary" : patient.gender === "Female" ? "bg-pink" : "bg-secondary"}`}
                           >
-                            <i className="bi bi-trash me-1"></i>Delete
-                          </Button>
+                            {patient.gender}
+                          </span>
+                        </td>
+                        <td>
+                          <small className="fw-bold">{patient.age}</small>
+                        </td>
+                        <td>
+                          <span className="badge bg-danger">
+                            {patient.bloodGroup}
+                          </span>
+                        </td>
+                        <td>
+                          <small className="text-muted">{patient.phone}</small>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2 justify-content-center">
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() =>
+                                console.log("View details for:", patient.id)
+                              }
+                              className="rounded-pill"
+                              style={{
+                                borderColor: "#48b575",
+                                color: "#48b575",
+                              }}
+                            >
+                              View
+                            </Button>
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() =>
+                                handleDelete(patient.id, patient.name)
+                              }
+                              className="rounded-pill"
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -266,13 +436,17 @@ const PatientList = () => {
         </Card>
       </div>
 
+      {/* Appointments Modal */}
       <Modal
         show={showAppointmentsModal}
         onHide={() => setShowAppointmentsModal(false)}
         size="lg"
+        centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>All Appointments</Modal.Title>
+          <Modal.Title style={{ color: "#2c3e50" }}>
+            All Appointments
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {appointments.length === 0 ? (
@@ -287,41 +461,55 @@ const PatientList = () => {
                     <th>ID</th>
                     <th>Patient</th>
                     <th>Doctor</th>
-                    <th>Date</th>
+                    <th>Date & Time</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {appointments.map((a, i) => (
-                    <tr key={i}>
-                      <td>#{a.appointmentId || i + 1}</td>
+                  {appointments.map((appointment, index) => (
+                    <tr key={appointment.appointmentId || index}>
+                      <td>#{appointment.appointmentId || index + 1}</td>
                       <td>
-                        <div>{a.patient?.patientName || "N/A"}</div>
+                        <div className="fw-semibold">
+                          {appointment.patient?.patientName ||
+                            appointment.patientName ||
+                            "N/A"}
+                        </div>
                         <small className="text-muted">
-                          {a.patient?.email || ""}
+                          {appointment.patient?.email ||
+                            appointment.email ||
+                            ""}
                         </small>
                       </td>
                       <td>
-                        <div>{a.doctor?.doctorName || "N/A"}</div>
+                        <div className="fw-semibold">
+                          {appointment.doctor?.doctorName ||
+                            appointment.doctorName ||
+                            "N/A"}
+                        </div>
                         <small className="text-muted">
-                          {a.doctor?.specialization || ""}
+                          {appointment.doctor?.speciality ||
+                            appointment.speciality ||
+                            ""}
                         </small>
                       </td>
                       <td>
-                        <div>
-                          {a.appointmentDate
-                            ? new Date(a.appointmentDate).toLocaleDateString()
+                        <div className="fw-semibold">
+                          {appointment.appointmentDate
+                            ? new Date(
+                                appointment.appointmentDate,
+                              ).toLocaleDateString()
                             : "N/A"}
                         </div>
                         <small className="text-muted">
-                          {a.appointmentTime || ""}
+                          {appointment.appointmentTime || ""}
                         </small>
                       </td>
                       <td>
                         <span
-                          className={`badge ${a.status === "CONFIRMED" ? "bg-success" : a.status === "PENDING" ? "bg-warning" : "bg-secondary"}`}
+                          className={`badge ${appointment.status === "CONFIRMED" || appointment.status === "Confirmed" ? "bg-success" : appointment.status === "PENDING" || appointment.status === "Pending" ? "bg-warning" : "bg-secondary"}`}
                         >
-                          {a.status || "UNKNOWN"}
+                          {appointment.status || "UNKNOWN"}
                         </span>
                       </td>
                     </tr>

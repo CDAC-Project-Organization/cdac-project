@@ -56,10 +56,10 @@ public class SecurityConfiguration {
                 ).hasAuthority("ROLE_DOCTOR")
 
                 .requestMatchers(
-                    "/doctor/edit-profile",
-                    "/doctor/by-user",
-                    "/Appointments/doctor/**"
-                ).hasAuthority("ROLE_DOCTOR")
+                	    "/doctor/edit-profile",
+                	    "/doctor/by-user",
+                	    "/Appointments/doctor/**"
+                	).hasAnyAuthority("ROLE_DOCTOR", "ROLE_ADMIN")
 
                 .requestMatchers(
                     "/patient/edit-profile/**",
@@ -77,8 +77,7 @@ public class SecurityConfiguration {
                 .requestMatchers(
                     "/patient/AllPatients",
                     "/patient/**",
-                    "/doctor/AddDoctors",
-                    "/doctor/**"
+                    "/doctor/AddDoctors"
                 ).hasAuthority("ROLE_ADMIN")
 
                 .requestMatchers(

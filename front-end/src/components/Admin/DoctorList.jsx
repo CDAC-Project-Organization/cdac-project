@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Badge, Card, Form, InputGroup, Toast, ToastContainer } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import AdminNavbar from './AdminNavBar';
+import AdminNavbar from './AdminNavbar';
 import axios from 'axios';
 
 const DoctorList = () => {
