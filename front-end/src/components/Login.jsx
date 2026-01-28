@@ -267,40 +267,6 @@ const Login = () => {
                     </Link>
                   </small>
                 </div>
-
-                {/* Quick Test Buttons */}
-                <div className="text-center mt-4">
-                  <p className="text-muted small mb-2">Quick Test:</p>
-                  <div className="d-flex flex-wrap justify-content-center gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() =>
-                        fillTestCredentials("sachin@gmail.com", "sachin")
-                      }
-                    >
-                      Patient Login
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-success"
-                      onClick={() =>
-                        fillTestCredentials("admin@doclink.com", "admin123")
-                      }
-                    >
-                      Admin Login
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-info"
-                      onClick={() =>
-                        fillTestCredentials("rahul@doclink.com", "doctor123")
-                      }
-                    >
-                      Doctor Login
-                    </button>
-                  </div>
-                </div>
               </form>
             </div>
           </div>

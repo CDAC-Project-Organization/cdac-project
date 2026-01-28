@@ -19,10 +19,12 @@ const PatientDashboard = () => {
     appointments: true,
     slots: false,
     booking: false,
+    patientData: true,
   });
   const [error, setError] = useState(null);
   const [patientName, setPatientName] = useState("Patient");
   const [successMessage, setSuccessMessage] = useState("");
+  const [patientId, setPatientId] = useState(null);
 
   const API_BASE_URL = "http://localhost:8080";
 
@@ -39,6 +41,41 @@ const PatientDashboard = () => {
     });
   };
 
+  // Fetch patient data first
+  const fetchPatientData = async () => {
+    try {
+      const api = getApi();
+      const response = await api.get("/patient/byUser");
+      const patientData = response.data;
+
+      // Store patientId in both localStorage and state
+      if (patientData.patientId) {
+        localStorage.setItem("patientId", patientData.patientId);
+        sessionStorage.setItem("patientId", patientData.patientId);
+        setPatientId(patientData.patientId);
+      }
+
+      // Set patient name
+      if (patientData.patientName) {
+        setPatientName(patientData.patientName);
+      } else if (patientData.email) {
+        const nameFromEmail = patientData.email.split("@")[0];
+        setPatientName(
+          nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1),
+        );
+      }
+
+      return patientData.patientId;
+    } catch (err) {
+      console.error("Error fetching patient data:", err);
+      if (err.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        navigate("/login");
+      }
+      return null;
+    }
+  };
+
   useEffect(() => {
     const isAuthenticated = sessionStorage.getItem("isAuthenticated");
     const userRole = sessionStorage.getItem("userRole");
@@ -47,23 +84,50 @@ const PatientDashboard = () => {
       return;
     }
 
-    fetchDoctors();
-    fetchPatientAppointments();
+    // First fetch patient data, then fetch other data
+    const initializeData = async () => {
+      setLoading((prev) => ({ ...prev, patientData: true }));
 
-    const token = getToken();
-    if (token) {
-      try {
-        const decoded = JSON.parse(atob(token.split(".")[1]));
-        if (decoded?.sub) {
-          const nameFromEmail = decoded.sub.split("@")[0];
-          setPatientName(
-            nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1),
-          );
+      // Try to get patientId from localStorage first
+      const storedPatientId =
+        localStorage.getItem("patientId") ||
+        sessionStorage.getItem("patientId");
+      if (storedPatientId) {
+        setPatientId(storedPatientId);
+      } else {
+        // If not found, fetch from API
+        const fetchedPatientId = await fetchPatientData();
+        if (!fetchedPatientId) {
+          alert("Failed to load patient data. Please login again.");
+          navigate("/login");
+          return;
         }
-      } catch (e) {
-        console.log("Error decoding token:", e);
       }
-    }
+
+      // Set patient name from token if not set
+      const token = getToken();
+      if (token && !patientName) {
+        try {
+          const decoded = JSON.parse(atob(token.split(".")[1]));
+          if (decoded?.sub) {
+            const nameFromEmail = decoded.sub.split("@")[0];
+            setPatientName(
+              nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1),
+            );
+          }
+        } catch (e) {
+          console.log("Error decoding token:", e);
+        }
+      }
+
+      setLoading((prev) => ({ ...prev, patientData: false }));
+
+      // Now fetch other data
+      fetchDoctors();
+      fetchPatientAppointments();
+    };
+
+    initializeData();
   }, [navigate]);
 
   useEffect(() => {
@@ -109,17 +173,76 @@ const PatientDashboard = () => {
   const fetchPatientAppointments = async () => {
     setLoading((prev) => ({ ...prev, appointments: true }));
     try {
-      const patientId = localStorage.getItem("patientId");
-      if (patientId) {
+      const currentPatientId =
+        patientId ||
+        localStorage.getItem("patientId") ||
+        sessionStorage.getItem("patientId");
+      if (currentPatientId) {
         const api = getApi();
-        const response = await api.get(`/patient/appointments/${patientId}`);
-        setAppointments(response.data);
+        // Fetch appointments from the correct endpoint
+        const response = await api.get(
+          `/Appointments/patient/${currentPatientId}`,
+        );
+
+        // Transform the response data if needed
+        const appointmentsData = response.data.map((appointment) => ({
+          appointmentId: appointment.appointmentId,
+          doctorName: appointment.doctor?.doctorName || appointment.doctorName,
+          specialization:
+            appointment.doctor?.specialization || appointment.specialization,
+          appointmentDate: appointment.appointmentDate,
+          appointmentTime: appointment.appointmentTime || appointment.startTime,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          status: appointment.status,
+          doctor: appointment.doctor || {
+            doctorName: appointment.doctorName,
+            specialization: appointment.specialization,
+          },
+        }));
+
+        setAppointments(appointmentsData);
+      } else {
+        // If no patientId, try to fetch patient data first
+        const fetchedPatientId = await fetchPatientData();
+        if (fetchedPatientId) {
+          const api = getApi();
+          const response = await api.get(
+            `/Appointments/patient/${fetchedPatientId}`,
+          );
+
+          // Transform the response data
+          const appointmentsData = response.data.map((appointment) => ({
+            appointmentId: appointment.appointmentId,
+            doctorName:
+              appointment.doctor?.doctorName || appointment.doctorName,
+            specialization:
+              appointment.doctor?.specialization || appointment.specialization,
+            appointmentDate: appointment.appointmentDate,
+            appointmentTime:
+              appointment.appointmentTime || appointment.startTime,
+            startTime: appointment.startTime,
+            endTime: appointment.endTime,
+            status: appointment.status,
+            doctor: appointment.doctor || {
+              doctorName: appointment.doctorName,
+              specialization: appointment.specialization,
+            },
+          }));
+
+          setAppointments(appointmentsData);
+        }
       }
     } catch (err) {
       console.error("Error fetching appointments:", err);
       if (err.response?.status === 401) {
         alert("Session expired. Please login again.");
         navigate("/login");
+      } else if (err.response?.status === 404) {
+        // No appointments found - set empty array
+        setAppointments([]);
+      } else {
+        setError("Failed to load appointments");
       }
     } finally {
       setLoading((prev) => ({ ...prev, appointments: false }));
@@ -181,16 +304,25 @@ const PatientDashboard = () => {
     setSuccessMessage("");
 
     try {
-      const patientId = localStorage.getItem("patientId");
-      if (!patientId) {
-        alert("Patient ID not found. Please login again.");
-        navigate("/login");
-        return;
+      // Get patientId from multiple possible sources
+      let currentPatientId =
+        patientId ||
+        localStorage.getItem("patientId") ||
+        sessionStorage.getItem("patientId");
+
+      // If still no patientId, fetch it from API
+      if (!currentPatientId) {
+        currentPatientId = await fetchPatientData();
+        if (!currentPatientId) {
+          alert("Failed to get patient information. Please login again.");
+          navigate("/login");
+          return;
+        }
       }
 
       // Create appointment data
       const appointmentData = {
-        patientId: parseInt(patientId),
+        patientId: parseInt(currentPatientId),
         doctorId: selectedDoctor.doctorId,
         appointmentDate: selectedDate,
         startTime: selectedSlot.startTime,
@@ -198,6 +330,7 @@ const PatientDashboard = () => {
       };
 
       console.log("Booking appointment with data:", appointmentData);
+      console.log("Patient ID:", currentPatientId);
       console.log("Token:", getToken());
 
       // Make the booking request
@@ -237,6 +370,7 @@ const PatientDashboard = () => {
       }
     } catch (err) {
       console.error("Full booking error:", err);
+      console.error("Error response:", err.response);
 
       if (err.response) {
         if (err.response.status === 401) {
@@ -273,9 +407,8 @@ const PatientDashboard = () => {
     if (window.confirm("Are you sure you want to cancel this appointment?")) {
       try {
         const api = getApi();
-        const response = await api.put(
-          `/patient/cancelAppointment/${appointmentId}`,
-        );
+        // Note: Check if your backend uses PUT or POST for cancellation
+        const response = await api.put(`/Appointments/cancel/${appointmentId}`);
         if (response.status === 200) {
           alert("Appointment cancelled successfully");
           fetchPatientAppointments();
@@ -295,6 +428,7 @@ const PatientDashboard = () => {
   };
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
     const date = new Date(dateStr);
     const today = new Date();
     const tomorrow = new Date(today);
@@ -309,9 +443,22 @@ const PatientDashboard = () => {
   };
 
   const formatTime = (timeString) => {
-    if (!timeString) return "";
-    const [hours, minutes] = timeString.split(":");
+    if (!timeString) return "N/A";
+    const [hours, minutes, seconds] = timeString.split(":");
     const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const formatAppointmentTime = (timeString) => {
+    if (!timeString) return "N/A";
+    // Handle both "HH:MM:SS" and "HH:MM" formats
+    const parts = timeString.split(":");
+    if (parts.length < 2) return timeString;
+
+    const hour = parseInt(parts[0]);
+    const minutes = parts[1];
     const ampm = hour >= 12 ? "PM" : "AM";
     const hour12 = hour % 12 || 12;
     return `${hour12}:${minutes} ${ampm}`;
@@ -339,590 +486,635 @@ const PatientDashboard = () => {
       <div style={{ paddingTop: "80px" }}></div>
 
       <div className="container py-4">
-        {error && (
-          <div
-            className="alert alert-danger alert-dismissible fade show mb-4"
-            role="alert"
-          >
-            {error}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setError(null)}
-            ></button>
+        {loading.patientData && (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status"></div>
+            <p className="mt-3 text-muted">Loading your profile...</p>
           </div>
         )}
 
-        {successMessage && (
-          <div
-            className="alert alert-success alert-dismissible fade show mb-4"
-            role="alert"
-          >
-            {successMessage}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setSuccessMessage("")}
-            ></button>
-          </div>
-        )}
-
-        {/* Welcome Banner */}
-        <div
-          className="shadow-sm border-0 mb-4 p-4 rounded-3"
-          style={{ backgroundColor: "white", borderLeft: "5px solid #0d6efd" }}
-        >
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h3 className="fw-bold mb-2" style={{ color: "#2c3e50" }}>
-                Welcome back, {patientName}! 👋
-              </h3>
-              <p className="text-muted mb-0">
-                Book appointments with trusted doctors today
-              </p>
-            </div>
-            <div className="text-end">
-              <small className="text-muted d-block">Today is</small>
-              <strong>
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Booking Summary Alert */}
-        {selectedDoctor && selectedDate && selectedSlot && (
-          <div
-            className="alert alert-info mb-4 border-0 shadow-sm"
-            role="alert"
-            style={{ backgroundColor: "#e7f1ff" }}
-          >
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 className="fw-bold mb-1">Ready to Book</h6>
-                <p className="mb-0">
-                  <i className="bi bi-person-circle me-2"></i>
-                  <strong>Dr. {selectedDoctor.doctorName}</strong> •{" "}
-                  {selectedDoctor.specialization}
-                  <br />
-                  <i className="bi bi-calendar-check me-2"></i>
-                  {formatDate(selectedDate)} •{" "}
-                  <i className="bi bi-clock me-2"></i>
-                  {selectedSlot.display}
-                </p>
-              </div>
-              <div>
+        {!loading.patientData && (
+          <>
+            {error && (
+              <div
+                className="alert alert-danger alert-dismissible fade show mb-4"
+                role="alert"
+              >
+                {error}
                 <button
-                  className="btn btn-success px-4 rounded-pill"
-                  onClick={handleBookAppointment}
-                  disabled={loading.booking}
-                >
-                  {loading.booking ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      ></span>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-check-circle me-2"></i>
-                      Confirm Booking
-                    </>
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setError(null)}
+                ></button>
+              </div>
+            )}
+
+            {successMessage && (
+              <div
+                className="alert alert-success alert-dismissible fade show mb-4"
+                role="alert"
+              >
+                {successMessage}
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSuccessMessage("")}
+                ></button>
+              </div>
+            )}
+
+            {/* Welcome Banner */}
+            <div
+              className="shadow-sm border-0 mb-4 p-4 rounded-3"
+              style={{
+                backgroundColor: "white",
+                borderLeft: "5px solid #0d6efd",
+              }}
+            >
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h3 className="fw-bold mb-2" style={{ color: "#2c3e50" }}>
+                    Welcome back, {patientName}! 👋
+                  </h3>
+                  <p className="text-muted mb-0">
+                    Book appointments with trusted doctors today
+                  </p>
+                  {patientId && (
+                    <small className="text-muted">
+                      Patient ID: {patientId}
+                    </small>
                   )}
-                </button>
-                <button
-                  className="btn btn-outline-secondary ms-2"
-                  onClick={() => {
-                    setSelectedDate("");
-                    setSelectedSlot(null);
-                  }}
-                  disabled={loading.booking}
-                >
-                  Change
-                </button>
+                </div>
+                <div className="text-end">
+                  <small className="text-muted d-block">Today is</small>
+                  <strong>
+                    {new Date().toLocaleDateString("en-US", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </strong>
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Doctor Search Section */}
-        <div
-          className="shadow-sm border-0 mb-4 p-4 rounded-3"
-          style={{ backgroundColor: "white" }}
-        >
-          <h5 className="fw-bold mb-4" style={{ color: "#2c3e50" }}>
-            <i className="bi bi-search me-2"></i>
-            Find & Book Doctor
-          </h5>
+            {/* Booking Summary Alert */}
+            {selectedDoctor && selectedDate && selectedSlot && (
+              <div
+                className="alert alert-info mb-4 border-0 shadow-sm"
+                role="alert"
+                style={{ backgroundColor: "#e7f1ff" }}
+              >
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 className="fw-bold mb-1">Ready to Book</h6>
+                    <p className="mb-0">
+                      <i className="bi bi-person-circle me-2"></i>
+                      <strong>Dr. {selectedDoctor.doctorName}</strong> •{" "}
+                      {selectedDoctor.specialization}
+                      <br />
+                      <i className="bi bi-calendar-check me-2"></i>
+                      {formatDate(selectedDate)} •{" "}
+                      <i className="bi bi-clock me-2"></i>
+                      {selectedSlot.display}
+                    </p>
+                  </div>
+                  <div>
+                    <button
+                      className="btn btn-success px-4 rounded-pill"
+                      onClick={handleBookAppointment}
+                      disabled={loading.booking}
+                    >
+                      {loading.booking ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                          ></span>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-check-circle me-2"></i>
+                          Confirm Booking
+                        </>
+                      )}
+                    </button>
+                    <button
+                      className="btn btn-outline-secondary ms-2"
+                      onClick={() => {
+                        setSelectedDate("");
+                        setSelectedSlot(null);
+                      }}
+                      disabled={loading.booking}
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
-          {/* Search Filters */}
-          <div className="row g-3 mb-4">
-            <div className="col-md-6">
-              <label
-                className="form-label fw-medium"
-                style={{ color: "#2c3e50" }}
-              >
-                <i className="bi bi-funnel me-1"></i>
-                Specialization
-              </label>
-              <select
-                className="form-select"
-                value={selectedSpecialization}
-                onChange={(e) => {
-                  setSelectedSpecialization(e.target.value);
-                  setSelectedDoctor(null);
-                  setSelectedDate("");
-                  setSelectedSlot(null);
-                  setGroupedSlots({});
-                }}
-                disabled={loading.doctors}
-              >
-                <option value="">All Specializations</option>
-                {specializations.map((spec) => (
-                  <option key={spec} value={spec}>
-                    {spec}
-                  </option>
-                ))}
-              </select>
+            {/* Doctor Search Section */}
+            <div
+              className="shadow-sm border-0 mb-4 p-4 rounded-3"
+              style={{ backgroundColor: "white" }}
+            >
+              <h5 className="fw-bold mb-4" style={{ color: "#2c3e50" }}>
+                <i className="bi bi-search me-2"></i>
+                Find & Book Doctor
+              </h5>
+
+              {/* Search Filters */}
+              <div className="row g-3 mb-4">
+                <div className="col-md-6">
+                  <label
+                    className="form-label fw-medium"
+                    style={{ color: "#2c3e50" }}
+                  >
+                    <i className="bi bi-funnel me-1"></i>
+                    Specialization
+                  </label>
+                  <select
+                    className="form-select"
+                    value={selectedSpecialization}
+                    onChange={(e) => {
+                      setSelectedSpecialization(e.target.value);
+                      setSelectedDoctor(null);
+                      setSelectedDate("");
+                      setSelectedSlot(null);
+                      setGroupedSlots({});
+                    }}
+                    disabled={loading.doctors}
+                  >
+                    <option value="">All Specializations</option>
+                    {specializations.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-6">
+                  <label
+                    className="form-label fw-medium"
+                    style={{ color: "#2c3e50" }}
+                  >
+                    <i className="bi bi-geo-alt me-1"></i>
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter city or area"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                    disabled={loading.doctors}
+                  />
+                </div>
+              </div>
+
+              {/* Doctors List */}
+              {selectedSpecialization && (
+                <div className="mt-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="fw-bold mb-0" style={{ color: "#2c3e50" }}>
+                      <i className="bi bi-person-plus me-2"></i>
+                      Available Doctors ({filteredDoctors.length})
+                    </h6>
+                    <button
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={() => {
+                        setSearchLocation("");
+                        setSelectedSpecialization("");
+                      }}
+                    >
+                      <i className="bi bi-x-circle me-1"></i>
+                      Clear Filters
+                    </button>
+                  </div>
+
+                  {loading.doctors ? (
+                    <div className="text-center py-5">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      ></div>
+                      <p className="mt-3 text-muted">Loading doctors...</p>
+                    </div>
+                  ) : filteredDoctors.length > 0 ? (
+                    <div className="row g-4">
+                      {filteredDoctors.map((doctor) => (
+                        <div key={doctor.doctorId} className="col-12">
+                          <div
+                            className="border p-4 rounded-3"
+                            style={{ backgroundColor: "#f8f9fa" }}
+                          >
+                            <div className="row align-items-center">
+                              <div className="col-md-8">
+                                <div className="d-flex align-items-start">
+                                  <div
+                                    className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                                    style={{ width: "50px", height: "50px" }}
+                                  >
+                                    <i className="bi bi-person-fill"></i>
+                                  </div>
+                                  <div>
+                                    <h6
+                                      className="fw-bold mb-1"
+                                      style={{ color: "#2c3e50" }}
+                                    >
+                                      Dr. {doctor.doctorName}
+                                    </h6>
+                                    <p className="mb-2 text-muted">
+                                      <i className="bi bi-award me-1"></i>
+                                      {doctor.specialization}
+                                    </p>
+                                    <p className="mb-1 small">
+                                      <i className="bi bi-geo-alt text-primary me-1"></i>
+                                      {doctor.clinicAddress}
+                                    </p>
+                                    <div className="d-flex flex-wrap gap-3 mt-2">
+                                      <span className="badge bg-light text-dark">
+                                        <i className="bi bi-clock me-1"></i>
+                                        {formatTime(doctor.startTime)} -{" "}
+                                        {formatTime(doctor.endTime)}
+                                      </span>
+                                      <span className="badge bg-light text-dark">
+                                        <i className="bi bi-currency-rupee me-1"></i>
+                                        ₹{doctor.consultationFee}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-md-4 text-end">
+                                <button
+                                  className={`btn ${selectedDoctor?.doctorId === doctor.doctorId ? "btn-success" : "btn-primary"} rounded-pill px-4`}
+                                  onClick={() => {
+                                    if (
+                                      selectedDoctor?.doctorId ===
+                                      doctor.doctorId
+                                    ) {
+                                      setSelectedDoctor(null);
+                                      setSelectedDate("");
+                                      setSelectedSlot(null);
+                                    } else {
+                                      setSelectedDoctor(doctor);
+                                    }
+                                  }}
+                                  disabled={loading.slots || loading.booking}
+                                >
+                                  {selectedDoctor?.doctorId ===
+                                  doctor.doctorId ? (
+                                    <>
+                                      <i className="bi bi-check-circle me-1"></i>
+                                      Selected
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="bi bi-calendar-plus me-1"></i>
+                                      Select
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Available Slots for Selected Doctor */}
+                            {selectedDoctor?.doctorId === doctor.doctorId && (
+                              <div className="mt-4 pt-4 border-top">
+                                <h6 className="fw-bold mb-3">
+                                  <i className="bi bi-calendar-week me-2"></i>
+                                  Available Time Slots
+                                </h6>
+
+                                {loading.slots ? (
+                                  <div className="text-center py-3">
+                                    <div
+                                      className="spinner-border spinner-border-sm text-primary"
+                                      role="status"
+                                    ></div>
+                                    <small className="ms-2">
+                                      Loading available slots...
+                                    </small>
+                                  </div>
+                                ) : Object.keys(groupedSlots).length > 0 ? (
+                                  <div>
+                                    {Object.keys(groupedSlots).map((date) => (
+                                      <div key={date} className="mb-4">
+                                        <div className="d-flex align-items-center mb-3">
+                                          <div className="bg-primary text-white px-3 py-1 rounded-pill me-3">
+                                            <strong>{formatDate(date)}</strong>
+                                          </div>
+                                          <small className="text-muted">
+                                            {date}
+                                          </small>
+                                        </div>
+                                        <div className="d-flex flex-wrap gap-2">
+                                          {groupedSlots[date].map(
+                                            (slot, index) => (
+                                              <button
+                                                key={index}
+                                                className={`btn ${selectedDate === date && selectedSlot?.display === slot.display ? "btn-success" : "btn-outline-primary"} btn-sm rounded-pill`}
+                                                onClick={() => {
+                                                  if (
+                                                    selectedDate === date &&
+                                                    selectedSlot?.display ===
+                                                      slot.display
+                                                  ) {
+                                                    setSelectedDate("");
+                                                    setSelectedSlot(null);
+                                                  } else {
+                                                    setSelectedDate(date);
+                                                    setSelectedSlot(slot);
+                                                  }
+                                                }}
+                                                style={{ minWidth: "100px" }}
+                                                disabled={loading.booking}
+                                              >
+                                                {slot.display}
+                                                {selectedDate === date &&
+                                                  selectedSlot?.display ===
+                                                    slot.display && (
+                                                    <i className="bi bi-check ms-1"></i>
+                                                  )}
+                                              </button>
+                                            ),
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4">
+                                    <i
+                                      className="bi bi-calendar-x text-muted"
+                                      style={{ fontSize: "2rem" }}
+                                    ></i>
+                                    <p className="text-muted mt-2">
+                                      No available slots for this doctor
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-5">
+                      <i
+                        className="bi bi-search text-muted"
+                        style={{ fontSize: "3rem" }}
+                      ></i>
+                      <p className="text-muted mt-3">
+                        No doctors found matching your criteria
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="col-md-6">
-              <label
-                className="form-label fw-medium"
-                style={{ color: "#2c3e50" }}
-              >
-                <i className="bi bi-geo-alt me-1"></i>
-                Location
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter city or area"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                disabled={loading.doctors}
-              />
-            </div>
-          </div>
 
-          {/* Doctors List */}
-          {selectedSpecialization && (
-            <div className="mt-4">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="fw-bold mb-0" style={{ color: "#2c3e50" }}>
-                  <i className="bi bi-person-plus me-2"></i>
-                  Available Doctors ({filteredDoctors.length})
-                </h6>
+            {/* Appointments Section */}
+            <div
+              className="shadow-sm border-0 mb-4 p-4 rounded-3"
+              style={{ backgroundColor: "white" }}
+            >
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h5 className="fw-bold mb-0" style={{ color: "#2c3e50" }}>
+                    <i className="bi bi-calendar-check me-2"></i>
+                    Your Appointments
+                  </h5>
+                  <small className="text-muted">
+                    View and manage your appointments
+                  </small>
+                </div>
                 <button
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={() => {
-                    setSearchLocation("");
-                    setSelectedSpecialization("");
-                  }}
+                  className="btn btn-outline-primary"
+                  onClick={fetchPatientAppointments}
+                  disabled={loading.appointments}
                 >
-                  <i className="bi bi-x-circle me-1"></i>
-                  Clear Filters
+                  {loading.appointments ? (
+                    <span
+                      className="spinner-border spinner-border-sm me-1"
+                      role="status"
+                    ></span>
+                  ) : (
+                    <i className="bi bi-arrow-clockwise me-1"></i>
+                  )}
+                  Refresh
                 </button>
               </div>
 
-              {loading.doctors ? (
+              {loading.appointments ? (
                 <div className="text-center py-5">
                   <div
                     className="spinner-border text-primary"
                     role="status"
                   ></div>
-                  <p className="mt-3 text-muted">Loading doctors...</p>
+                  <p className="mt-3 text-muted">Loading appointments...</p>
                 </div>
-              ) : filteredDoctors.length > 0 ? (
-                <div className="row g-4">
-                  {filteredDoctors.map((doctor) => (
-                    <div key={doctor.doctorId} className="col-12">
-                      <div
-                        className="border p-4 rounded-3"
-                        style={{ backgroundColor: "#f8f9fa" }}
-                      >
-                        <div className="row align-items-center">
-                          <div className="col-md-8">
-                            <div className="d-flex align-items-start">
-                              <div
-                                className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                                style={{ width: "50px", height: "50px" }}
-                              >
-                                <i className="bi bi-person-fill"></i>
-                              </div>
-                              <div>
-                                <h6
-                                  className="fw-bold mb-1"
-                                  style={{ color: "#2c3e50" }}
-                                >
-                                  Dr. {doctor.doctorName}
-                                </h6>
-                                <p className="mb-2 text-muted">
-                                  <i className="bi bi-award me-1"></i>
-                                  {doctor.specialization}
-                                </p>
-                                <p className="mb-1 small">
-                                  <i className="bi bi-geo-alt text-primary me-1"></i>
-                                  {doctor.clinicAddress}
-                                </p>
-                                <div className="d-flex flex-wrap gap-3 mt-2">
-                                  <span className="badge bg-light text-dark">
-                                    <i className="bi bi-clock me-1"></i>
-                                    {formatTime(doctor.startTime)} -{" "}
-                                    {formatTime(doctor.endTime)}
-                                  </span>
-                                  <span className="badge bg-light text-dark">
-                                    <i className="bi bi-currency-rupee me-1"></i>
-                                    ₹{doctor.consultationFee}
-                                  </span>
-                                </div>
-                              </div>
+              ) : appointments.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle">
+                    <thead style={{ backgroundColor: "#f8f9fa" }}>
+                      <tr>
+                        <th>#</th>
+                        <th>Doctor</th>
+                        <th>Specialization</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appointments.map((appointment, index) => (
+                        <tr key={appointment.appointmentId || index}>
+                          <td className="fw-bold">
+                            {appointment.appointmentId || `A${index + 1}`}
+                          </td>
+                          <td>
+                            <strong>
+                              Dr.{" "}
+                              {appointment.doctorName ||
+                                appointment.doctor?.doctorName ||
+                                "N/A"}
+                            </strong>
+                          </td>
+                          <td>
+                            <span className="badge bg-light text-dark">
+                              {appointment.specialization ||
+                                appointment.doctor?.specialization ||
+                                "N/A"}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <i className="bi bi-calendar3 text-primary me-2"></i>
+                              {formatDate(appointment.appointmentDate) || "N/A"}
                             </div>
-                          </div>
-                          <div className="col-md-4 text-end">
-                            <button
-                              className={`btn ${selectedDoctor?.doctorId === doctor.doctorId ? "btn-success" : "btn-primary"} rounded-pill px-4`}
-                              onClick={() => {
-                                if (
-                                  selectedDoctor?.doctorId === doctor.doctorId
-                                ) {
-                                  setSelectedDoctor(null);
-                                  setSelectedDate("");
-                                  setSelectedSlot(null);
-                                } else {
-                                  setSelectedDoctor(doctor);
-                                }
-                              }}
-                              disabled={loading.slots || loading.booking}
-                            >
-                              {selectedDoctor?.doctorId === doctor.doctorId ? (
-                                <>
-                                  <i className="bi bi-check-circle me-1"></i>
-                                  Selected
-                                </>
-                              ) : (
-                                <>
-                                  <i className="bi bi-calendar-plus me-1"></i>
-                                  Select
-                                </>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <i className="bi bi-clock text-primary me-2"></i>
+                              {formatAppointmentTime(
+                                appointment.appointmentTime ||
+                                  appointment.startTime,
                               )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Available Slots for Selected Doctor */}
-                        {selectedDoctor?.doctorId === doctor.doctorId && (
-                          <div className="mt-4 pt-4 border-top">
-                            <h6 className="fw-bold mb-3">
-                              <i className="bi bi-calendar-week me-2"></i>
-                              Available Time Slots
-                            </h6>
-
-                            {loading.slots ? (
-                              <div className="text-center py-3">
-                                <div
-                                  className="spinner-border spinner-border-sm text-primary"
-                                  role="status"
-                                ></div>
-                                <small className="ms-2">
-                                  Loading available slots...
-                                </small>
-                              </div>
-                            ) : Object.keys(groupedSlots).length > 0 ? (
-                              <div>
-                                {Object.keys(groupedSlots).map((date) => (
-                                  <div key={date} className="mb-4">
-                                    <div className="d-flex align-items-center mb-3">
-                                      <div className="bg-primary text-white px-3 py-1 rounded-pill me-3">
-                                        <strong>{formatDate(date)}</strong>
-                                      </div>
-                                      <small className="text-muted">
-                                        {date}
-                                      </small>
-                                    </div>
-                                    <div className="d-flex flex-wrap gap-2">
-                                      {groupedSlots[date].map((slot, index) => (
-                                        <button
-                                          key={index}
-                                          className={`btn ${selectedDate === date && selectedSlot?.display === slot.display ? "btn-success" : "btn-outline-primary"} btn-sm rounded-pill`}
-                                          onClick={() => {
-                                            if (
-                                              selectedDate === date &&
-                                              selectedSlot?.display ===
-                                                slot.display
-                                            ) {
-                                              setSelectedDate("");
-                                              setSelectedSlot(null);
-                                            } else {
-                                              setSelectedDate(date);
-                                              setSelectedSlot(slot);
-                                            }
-                                          }}
-                                          style={{ minWidth: "100px" }}
-                                          disabled={loading.booking}
-                                        >
-                                          {slot.display}
-                                          {selectedDate === date &&
-                                            selectedSlot?.display ===
-                                              slot.display && (
-                                              <i className="bi bi-check ms-1"></i>
-                                            )}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                appointment.status === "CONFIRMED" ||
+                                appointment.status === "BOOKED"
+                                  ? "bg-success"
+                                  : appointment.status === "COMPLETED"
+                                    ? "bg-info"
+                                    : appointment.status === "CANCELLED"
+                                      ? "bg-danger"
+                                      : appointment.status === "PENDING"
+                                        ? "bg-warning"
+                                        : "bg-secondary"
+                              }`}
+                            >
+                              {appointment.status || "PENDING"}
+                            </span>
+                          </td>
+                          <td>
+                            {appointment.status === "BOOKED" ||
+                            appointment.status === "CONFIRMED" ||
+                            appointment.status === "PENDING" ? (
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() =>
+                                  handleCancelAppointment(
+                                    appointment.appointmentId,
+                                  )
+                                }
+                                disabled={loading.appointments}
+                              >
+                                <i className="bi bi-x-circle me-1"></i>
+                                Cancel
+                              </button>
                             ) : (
-                              <div className="text-center py-4">
-                                <i
-                                  className="bi bi-calendar-x text-muted"
-                                  style={{ fontSize: "2rem" }}
-                                ></i>
-                                <p className="text-muted mt-2">
-                                  No available slots for this doctor
-                                </p>
-                              </div>
+                              <span className="text-muted small">
+                                No actions
+                              </span>
                             )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
                 <div className="text-center py-5">
                   <i
-                    className="bi bi-search text-muted"
+                    className="bi bi-calendar-x text-muted"
                     style={{ fontSize: "3rem" }}
                   ></i>
                   <p className="text-muted mt-3">
-                    No doctors found matching your criteria
+                    No appointments scheduled yet
+                  </p>
+                  <p className="text-muted">
+                    Book your first appointment above!
                   </p>
                 </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Appointments Section */}
-        <div
-          className="shadow-sm border-0 mb-4 p-4 rounded-3"
-          style={{ backgroundColor: "white" }}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h5 className="fw-bold mb-0" style={{ color: "#2c3e50" }}>
-                <i className="bi bi-calendar-check me-2"></i>
-                Your Appointments
-              </h5>
-              <small className="text-muted">
-                View and manage your appointments
-              </small>
-            </div>
-            <button
-              className="btn btn-outline-primary"
-              onClick={fetchPatientAppointments}
-              disabled={loading.appointments}
+            {/* Specializations Grid */}
+            <div
+              className="shadow-sm border-0 p-4 rounded-3"
+              style={{ backgroundColor: "white" }}
             >
-              {loading.appointments ? (
-                <span
-                  className="spinner-border spinner-border-sm me-1"
-                  role="status"
-                ></span>
-              ) : (
-                <i className="bi bi-arrow-clockwise me-1"></i>
-              )}
-              Refresh
-            </button>
-          </div>
+              <h5 className="fw-bold mb-4" style={{ color: "#2c3e50" }}>
+                <i className="bi bi-heart-pulse me-2"></i>
+                Browse by Specialization
+              </h5>
 
-          {loading.appointments ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status"></div>
-              <p className="mt-3 text-muted">Loading appointments...</p>
-            </div>
-          ) : appointments.length > 0 ? (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead style={{ backgroundColor: "#f8f9fa" }}>
-                  <tr>
-                    <th>#</th>
-                    <th>Doctor</th>
-                    <th>Specialization</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.map((appointment, index) => (
-                    <tr key={appointment.appointmentId || index}>
-                      <td className="fw-bold">
-                        {appointment.appointmentId || index + 1}
-                      </td>
-                      <td>
-                        <strong>
-                          Dr.{" "}
-                          {appointment.doctorName ||
-                            appointment.doctor?.doctorName ||
-                            "N/A"}
-                        </strong>
-                      </td>
-                      <td>
-                        <span className="badge bg-light text-dark">
-                          {appointment.specialization ||
-                            appointment.doctor?.specialization ||
-                            "N/A"}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <i className="bi bi-calendar3 text-primary me-2"></i>
-                          {appointment.appointmentDate
-                            ? formatDate(appointment.appointmentDate)
-                            : "N/A"}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <i className="bi bi-clock text-primary me-2"></i>
-                          {formatTime(
-                            appointment.appointmentTime ||
-                              appointment.startTime,
-                          ) || "N/A"}
-                        </div>
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${appointment.status === "CONFIRMED" || appointment.status === "BOOKED" ? "bg-success" : appointment.status === "COMPLETED" ? "bg-info" : appointment.status === "CANCELLED" ? "bg-danger" : "bg-warning"}`}
+              {loading.doctors ? (
+                <div className="text-center py-3">
+                  <div
+                    className="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  ></div>
+                </div>
+              ) : specializations.length > 0 ? (
+                <div className="row g-3">
+                  {specializations.map((spec) => {
+                    const doctorCount = doctors.filter(
+                      (doc) => doc.specialization === spec,
+                    ).length;
+                    return (
+                      <div key={spec} className="col-md-4 col-sm-6">
+                        <div
+                          className="p-3 rounded-3 border cursor-pointer h-100"
+                          style={{
+                            backgroundColor: "#f8f9fa",
+                            borderColor: "#48b575",
+                            cursor: "pointer",
+                            transition: "all 0.3s",
+                          }}
+                          onClick={() => setSelectedSpecialization(spec)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform =
+                              "translateY(-5px)";
+                            e.currentTarget.style.boxShadow =
+                              "0 5px 15px rgba(0,0,0,0.1)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "none";
+                          }}
                         >
-                          {appointment.status || "PENDING"}
-                        </span>
-                      </td>
-                      <td>
-                        {appointment.status === "BOOKED" ||
-                        appointment.status === "CONFIRMED" ? (
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() =>
-                              handleCancelAppointment(appointment.appointmentId)
-                            }
-                            disabled={loading.appointments}
-                          >
-                            <i className="bi bi-x-circle me-1"></i>
-                            Cancel
-                          </button>
-                        ) : (
-                          <span className="text-muted small">No actions</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-5">
-              <i
-                className="bi bi-calendar-x text-muted"
-                style={{ fontSize: "3rem" }}
-              ></i>
-              <p className="text-muted mt-3">No appointments scheduled yet</p>
-              <p className="text-muted">Book your first appointment above!</p>
-            </div>
-          )}
-        </div>
-
-        {/* Specializations Grid */}
-        <div
-          className="shadow-sm border-0 p-4 rounded-3"
-          style={{ backgroundColor: "white" }}
-        >
-          <h5 className="fw-bold mb-4" style={{ color: "#2c3e50" }}>
-            <i className="bi bi-heart-pulse me-2"></i>
-            Browse by Specialization
-          </h5>
-
-          {loading.doctors ? (
-            <div className="text-center py-3">
-              <div
-                className="spinner-border spinner-border-sm text-primary"
-                role="status"
-              ></div>
-            </div>
-          ) : specializations.length > 0 ? (
-            <div className="row g-3">
-              {specializations.map((spec) => {
-                const doctorCount = doctors.filter(
-                  (doc) => doc.specialization === spec,
-                ).length;
-                return (
-                  <div key={spec} className="col-md-4 col-sm-6">
-                    <div
-                      className="p-3 rounded-3 border cursor-pointer h-100"
-                      style={{
-                        backgroundColor: "#f8f9fa",
-                        borderColor: "#48b575",
-                        cursor: "pointer",
-                        transition: "all 0.3s",
-                      }}
-                      onClick={() => setSelectedSpecialization(spec)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-5px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 5px 15px rgba(0,0,0,0.1)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    >
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div>
-                          <h6
-                            className="fw-bold mb-1"
-                            style={{ color: "#2c3e50" }}
-                          >
-                            {spec}
-                          </h6>
-                          <small className="text-muted">
-                            {doctorCount} doctor{doctorCount !== 1 ? "s" : ""}{" "}
-                            available
-                          </small>
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                              <h6
+                                className="fw-bold mb-1"
+                                style={{ color: "#2c3e50" }}
+                              >
+                                {spec}
+                              </h6>
+                              <small className="text-muted">
+                                {doctorCount} doctor
+                                {doctorCount !== 1 ? "s" : ""} available
+                              </small>
+                            </div>
+                            <i className="bi bi-arrow-right-circle text-primary"></i>
+                          </div>
                         </div>
-                        <i className="bi bi-arrow-right-circle text-primary"></i>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-muted">
+                  No specializations available at the moment.
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-muted">
-              No specializations available at the moment.
-            </p>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="text-center py-4 mt-4 text-muted small">
-          <p className="mb-0">
-            <i className="bi bi-shield-check me-1"></i>
-            Your health is our priority. All appointments are secured and
-            confidential.
-          </p>
-          <p className="mb-0">
-            Need help? Contact support at support@healthcare.com
-          </p>
-        </div>
+            {/* Footer */}
+            <div className="text-center py-4 mt-4 text-muted small">
+              <p className="mb-0">
+                <i className="bi bi-shield-check me-1"></i>
+                Your health is our priority. All appointments are secured and
+                confidential.
+              </p>
+              <p className="mb-0">
+                Need help? Contact support at support@healthcare.com
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
