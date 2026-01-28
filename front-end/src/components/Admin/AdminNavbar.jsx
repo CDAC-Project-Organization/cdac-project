@@ -39,7 +39,7 @@ const AdminNavbar = () => {
           onClick={handleDashboardClick}
           style={{ cursor: "pointer", color: "#ffffff" }}
         >
-          E-MED Admin
+          DocLink Admin
         </a>
 
         <button

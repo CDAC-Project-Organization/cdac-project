@@ -229,7 +229,7 @@ const DoctorList = () => {
                                             <th>Experience</th>
                                             <th>Fee</th>
                                             <th>Availability</th>
-                                            <th className="text-center">Actions</th>
+                                           
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -265,27 +265,7 @@ const DoctorList = () => {
                                                         {formatTime(doctor.startTime)} - {formatTime(doctor.endTime)}
                                                     </small>
                                                 </td>
-                                                <td>
-                                                    <div className="d-flex gap-2 justify-content-center">
-                                                        <Button 
-                                                            variant="outline-primary" 
-                                                            size="sm"
-                                                            onClick={() => handleEdit(doctor.doctorId)}
-                                                            className="rounded-pill"
-                                                            style={{ borderColor: '#48b575', color: '#48b575' }}
-                                                        >
-                                                            Edit
-                                                        </Button>
-                                                        <Button 
-                                                            variant="outline-danger" 
-                                                            size="sm"
-                                                            onClick={() => handleDelete(doctor.doctorId, doctor.doctorName)}
-                                                            className="rounded-pill"
-                                                        >
-                                                            Delete
-                                                        </Button>
-                                                    </div>
-                                                </td>
+                                               
                                             </tr>
                                         ))}
                                     </tbody>

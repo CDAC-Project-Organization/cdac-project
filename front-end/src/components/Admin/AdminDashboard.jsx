@@ -1,15 +1,66 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import { Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "./AdminNavbar";
+import axios from "axios";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ doctors: 5, patients: 5 });
+  const [stats, setStats] = useState({ 
+    doctors: 0, 
+    patients: 0,
+    activeDoctors: 0,
+    activePatients: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch statistics from APIs
+  const fetchStatistics = async () => {
+    setLoading(true);
+    try {
+      // Fetch total doctors
+      const doctorsResponse = await axios.get("http://localhost:8080/doctor/findAllDoctors");
+      const totalDoctors = doctorsResponse.data.length;
+      
+      // Fetch total patients
+      const patientsResponse = await axios.get("http://localhost:8080/patient/AllPatients");
+      const totalPatients = patientsResponse.data.length;
+
+      // For now, we'll use the same numbers for active counts
+      // If you have APIs for active counts, replace these
+      const activeDoctors = totalDoctors;
+      const activePatients = totalPatients;
+
+      setStats({
+        doctors: totalDoctors,
+        patients: totalPatients,
+        activeDoctors: activeDoctors,
+        activePatients: activePatients
+      });
+      
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching statistics:", err);
+      setError("Failed to load statistics. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatistics();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("isAuthenticated");
+    sessionStorage.removeItem("jwtToken");
+    sessionStorage.removeItem("currentUser");
+    sessionStorage.removeItem("isAuthenticated");
+    sessionStorage.removeItem("patientId");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("userRole");
     navigate("/login");
   };
 
@@ -36,10 +87,22 @@ const AdminDashboard = () => {
                 Admin Dashboard
               </h2>
               <p className="text-muted mb-0">
-                Welcome to E-MED admin panel. Manage doctors and patients
-                efficiently.
+                Welcome to DocLink admin panel. Manage doctors and patients efficiently.
               </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="alert alert-danger mb-4" role="alert">
+                {error}
+                <button 
+                  className="btn btn-sm btn-outline-danger ms-3" 
+                  onClick={fetchStatistics}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
             <Row>
               <Col md={6} className="mb-4">
@@ -48,22 +111,33 @@ const AdminDashboard = () => {
                   style={{ borderRadius: "16px" }}
                 >
                   <Card.Body className="text-center p-4">
-                    <h1 className="fw-bold mb-2" style={{ color: "#48b575" }}>
-                      {stats.doctors}
-                    </h1>
-                    <p className="text-muted mb-3 fs-5">Total Doctors</p>
-                    <a
-                      href="/admin/doctorList"
-                      className="btn rounded-pill px-4"
-                      style={{
-                        backgroundColor: "#48b575",
-                        color: "white",
-                        border: "none",
-                        fontWeight: "600",
-                      }}
-                    >
-                      View Doctors
-                    </a>
+                    {loading ? (
+                      <div className="py-4">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="mt-2 text-muted">Loading...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <h1 className="fw-bold mb-2" style={{ color: "#48b575" }}>
+                          {stats.doctors}
+                        </h1>
+                        <p className="text-muted mb-3 fs-5">Total Doctors</p>
+                        <a
+                          href="/admin/doctorList"
+                          className="btn rounded-pill px-4"
+                          style={{
+                            backgroundColor: "#48b575",
+                            color: "white",
+                            border: "none",
+                            fontWeight: "600",
+                          }}
+                        >
+                          View Doctors
+                        </a>
+                      </>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -74,22 +148,33 @@ const AdminDashboard = () => {
                   style={{ borderRadius: "16px" }}
                 >
                   <Card.Body className="text-center p-4">
-                    <h1 className="fw-bold mb-2" style={{ color: "#48b575" }}>
-                      {stats.patients}
-                    </h1>
-                    <p className="text-muted mb-3 fs-5">Total Patients</p>
-                    <a
-                      href="/admin/patientList"
-                      className="btn rounded-pill px-4"
-                      style={{
-                        backgroundColor: "#48b575",
-                        color: "white",
-                        border: "none",
-                        fontWeight: "600",
-                      }}
-                    >
-                      View Patients
-                    </a>
+                    {loading ? (
+                      <div className="py-4">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="mt-2 text-muted">Loading...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <h1 className="fw-bold mb-2" style={{ color: "#48b575" }}>
+                          {stats.patients}
+                        </h1>
+                        <p className="text-muted mb-3 fs-5">Total Patients</p>
+                        <a
+                          href="/admin/patientList"
+                          className="btn rounded-pill px-4"
+                          style={{
+                            backgroundColor: "#48b575",
+                            color: "white",
+                            border: "none",
+                            fontWeight: "600",
+                          }}
+                        >
+                          View Patients
+                        </a>
+                      </>
+                    )}
                   </Card.Body>
                 </Card>
               </Col>
@@ -141,23 +226,12 @@ const AdminDashboard = () => {
                   >
                     Manage Patients
                   </a>
-                  <a
-                    href="/admin/appointments"
-                    className="btn rounded-pill px-4 fw-medium"
-                    style={{
-                      border: "2px solid #48b575",
-                      color: "#48b575",
-                      backgroundColor: "transparent",
-                      padding: "10px 24px",
-                    }}
-                  >
-                    All Appointments
-                  </a>
+                  
                 </div>
               </Card.Body>
             </Card>
 
-            {/* System Overview */}
+            {/* System Overview - Removed Today's Appointments card */}
             <Card
               className="shadow-sm border-0"
               style={{ borderRadius: "16px" }}
@@ -167,7 +241,7 @@ const AdminDashboard = () => {
                   System Overview
                 </h5>
                 <Row className="text-center">
-                  <Col md={4} className="mb-3">
+                  <Col md={6} className="mb-3">
                     <div
                       className="p-4 rounded"
                       style={{
@@ -175,13 +249,24 @@ const AdminDashboard = () => {
                         border: "1px solid #e9ecef",
                       }}
                     >
-                      <h6 className="text-muted mb-2">Active Doctors</h6>
-                      <h3 className="fw-bold mb-0" style={{ color: "#48b575" }}>
-                        5
-                      </h3>
+                      {loading ? (
+                        <div>
+                          <div className="spinner-border spinner-border-sm text-primary mb-2" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                          <h6 className="text-muted mb-2">Active Doctors</h6>
+                        </div>
+                      ) : (
+                        <>
+                          <h6 className="text-muted mb-2">Active Doctors</h6>
+                          <h3 className="fw-bold mb-0" style={{ color: "#48b575" }}>
+                            {stats.activeDoctors}
+                          </h3>
+                        </>
+                      )}
                     </div>
                   </Col>
-                  <Col md={4} className="mb-3">
+                  <Col md={6} className="mb-3">
                     <div
                       className="p-4 rounded"
                       style={{
@@ -189,33 +274,28 @@ const AdminDashboard = () => {
                         border: "1px solid #e9ecef",
                       }}
                     >
-                      <h6 className="text-muted mb-2">Active Patients</h6>
-                      <h3 className="fw-bold mb-0" style={{ color: "#48b575" }}>
-                        5
-                      </h3>
-                    </div>
-                  </Col>
-                  <Col md={4} className="mb-3">
-                    <div
-                      className="p-4 rounded"
-                      style={{
-                        backgroundColor: "#ffffff",
-                        border: "1px solid #e9ecef",
-                      }}
-                    >
-                      <h6 className="text-muted mb-2">Today's Appointments</h6>
-                      <h3 className="fw-bold mb-0" style={{ color: "#48b575" }}>
-                        12
-                      </h3>
+                      {loading ? (
+                        <div>
+                          <div className="spinner-border spinner-border-sm text-primary mb-2" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                          <h6 className="text-muted mb-2">Active Patients</h6>
+                        </div>
+                      ) : (
+                        <>
+                          <h6 className="text-muted mb-2">Active Patients</h6>
+                          <h3 className="fw-bold mb-0" style={{ color: "#48b575" }}>
+                            {stats.activePatients}
+                          </h3>
+                        </>
+                      )}
                     </div>
                   </Col>
                 </Row>
               </Card.Body>
             </Card>
           </>
-        ) : (
-          <Outlet />
-        )}
+        ) : null}
       </Container>
 
       {/* Footer */}
@@ -225,7 +305,7 @@ const AdminDashboard = () => {
       >
         <div className="container text-center">
           <small style={{ color: "#95a5a6" }}>
-            © 2026 E-MED Admin Panel. All rights reserved.
+            © 2026 DocLink Admin Panel. All rights reserved.
           </small>
         </div>
       </footer>

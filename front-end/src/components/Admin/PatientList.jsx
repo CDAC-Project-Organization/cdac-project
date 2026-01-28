@@ -264,19 +264,7 @@ const PatientList = () => {
             </Card>
           </Col>
           <Col md={6} lg={3}>
-            <Card
-              className="shadow-sm border-0 h-100"
-              style={{ borderRadius: "16px" }}
-            >
-              <Card.Body className="p-4">
-                <h5 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
-                  Total Appointments
-                </h5>
-                <h3 className="mb-0" style={{ color: "#3498db" }}>
-                  {appointments.length}
-                </h3>
-              </Card.Body>
-            </Card>
+            
           </Col>
           <Col md={12} lg={6}>
             <Card
@@ -362,10 +350,10 @@ const PatientList = () => {
                       <th>Patient Name</th>
                       <th>Email</th>
                       <th>Gender</th>
-                      <th>Age</th>
+                      
                       <th>Blood Group</th>
-                      <th>Contact</th>
-                      <th className="text-center">Actions</th>
+                     
+                      {/* <th className="text-center">Actions</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -382,49 +370,20 @@ const PatientList = () => {
                         </td>
                         <td>
                           <span
-                            className={`badge ${patient.gender === "Male" ? "bg-primary" : patient.gender === "Female" ? "bg-pink" : "bg-secondary"}`}
+                            className={`badge ${patient.gender === "Male" ? "bg-primary" : patient.gender === "Female" ? "bg-secondary" : "bg-secondary"}`}
                           >
                             {patient.gender}
                           </span>
                         </td>
-                        <td>
-                          <small className="fw-bold">{patient.age}</small>
-                        </td>
+                       
                         <td>
                           <span className="badge bg-danger">
                             {patient.bloodGroup}
                           </span>
                         </td>
+                      
                         <td>
-                          <small className="text-muted">{patient.phone}</small>
-                        </td>
-                        <td>
-                          <div className="d-flex gap-2 justify-content-center">
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() =>
-                                console.log("View details for:", patient.id)
-                              }
-                              className="rounded-pill"
-                              style={{
-                                borderColor: "#48b575",
-                                color: "#48b575",
-                              }}
-                            >
-                              View
-                            </Button>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() =>
-                                handleDelete(patient.id, patient.name)
-                              }
-                              className="rounded-pill"
-                            >
-                              Delete
-                            </Button>
-                          </div>
+                          
                         </td>
                       </tr>
                     ))}
