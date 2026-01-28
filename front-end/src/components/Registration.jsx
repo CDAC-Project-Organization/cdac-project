@@ -207,8 +207,39 @@ const Registration = () => {
             href="/"
             style={{ color: "#ffffff" }}
           >
-            E-MED
+            DocLink
           </a>
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <a
+                  className="nav-link fw-medium"
+                  href="/"
+                  style={{ color: "#e8f5e9" }}
+                >
+                  Home
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  className="nav-link fw-medium"
+                  href="/login"
+                  style={{ color: "#e8f5e9" }}
+                >
+                  Login
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  className="nav-link fw-medium"
+                  href="/signup"
+                  style={{ color: "#e8f5e9" }}
+                >
+                  Sign Up
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </nav>
 

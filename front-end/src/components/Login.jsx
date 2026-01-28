@@ -117,7 +117,7 @@ const Login = () => {
             href="/"
             style={{ color: "#ffffff" }}
           >
-            E-MED
+            DocLink
           </a>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
@@ -153,14 +153,14 @@ const Login = () => {
         </div>
       </nav>
 
-      <div style={{ paddingTop: "80px" }}></div>
+      <div style={{ paddingTop: "150px" }}></div>
 
       <div className="container py-5">
         <div className="row justify-content-center">
           <div className="col-lg-5">
             <div className="mb-4 text-center">
               <h2 className="fw-bold mb-2" style={{ color: "#2c3e50" }}>
-                Login to E-MED
+                Login to DocLink
               </h2>
               <p className="text-muted mb-0">Sign in to access your account</p>
             </div>

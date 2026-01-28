@@ -1,21 +1,18 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios"; // AXIOS IMPORT
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import PatientNavbar from "./PatientNavbar";
 
 function EditPatient() {
-  const { patientId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     patientName: "",
     email: "",
-    phone: "",
-    address: "",
     gender: "MALE",
-    dateOfBirth: "",
     bloodGroup: "A_POSITIVE",
     familyHistory: "",
+    profileImage: ""
   });
 
   const [preview, setPreview] = useState(
@@ -26,43 +23,99 @@ function EditPatient() {
 
   // AXIOS CONFIGURATION
   const API_BASE_URL = "http://localhost:8080";
-  const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: { "Content-Type": "application/json" },
-  });
 
-  // Fetch patient data
+  // Get JWT token and patient ID from session storage (same as PatientDashboard)
+  const getToken = () => sessionStorage.getItem("jwtToken");
+  const getPatientId = () => {
+    return sessionStorage.getItem("patientId") || localStorage.getItem("patientId");
+  };
+
+  // Create authenticated axios instance (same as PatientDashboard)
+  const getApi = () => {
+    const token = getToken();
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+    return axios.create({
+      baseURL: API_BASE_URL,
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    });
+  };
+
+  // Fetch patient data for logged-in user
   useEffect(() => {
-    fetchPatientData();
-  }, [patientId]);
+    // Check authentication (same as PatientDashboard)
+    const isAuthenticated = sessionStorage.getItem("isAuthenticated");
+    const userRole = sessionStorage.getItem("userRole");
+    const token = getToken();
 
-  // AXIOS GET REQUEST
+    if (!isAuthenticated || userRole !== "ROLE_PATIENT" || !token) {
+      alert("Please login as patient to access this page");
+      navigate("/login");
+      return;
+    }
+
+    fetchPatientData();
+  }, [navigate]);
+
+  // Fetch current patient data using JWT token (same as PatientDashboard)
   const fetchPatientData = async () => {
     setLoading(true);
+    setMessage({ type: "", text: "" });
+
     try {
-      const response = await api.get(`/patient/${patientId}`); // AXIOS GET
+      const api = getApi();
+      
+      // Fetch patient data using JWT token (same as PatientDashboard)
+      const response = await api.get("/patient/byUser");
       const patient = response.data;
 
+      console.log("Fetched patient data from /patient/byUser:", patient);
+
+      // Populate form with fetched data (only required fields as per API)
       setFormData({
         patientName: patient.patientName || "",
         email: patient.email || "",
-        phone: patient.phone || "",
-        address: patient.address || "",
         gender: patient.gender || "MALE",
-        dateOfBirth: patient.dateOfBirth || "",
         bloodGroup: patient.bloodGroup || "A_POSITIVE",
         familyHistory: patient.familyHistory || "",
+        profileImage: patient.profileImage || ""
       });
 
+      // Store patient ID in session storage (same as PatientDashboard)
+      if (patient.patientId) {
+        sessionStorage.setItem("patientId", patient.patientId);
+        localStorage.setItem("patientId", patient.patientId);
+        console.log("Stored patientId:", patient.patientId);
+      }
+
+      // Set profile image preview if available
       if (patient.profileImage) {
         setPreview(`${API_BASE_URL}${patient.profileImage}`);
       }
+
     } catch (err) {
       console.error("Error fetching patient data:", err);
-      setMessage({
-        type: "danger",
-        text: "Failed to load patient data. Please try again.",
-      });
+      
+      if (err.response?.status === 401) {
+        setMessage({
+          type: "danger",
+          text: "Session expired. Please login again.",
+        });
+        setTimeout(() => {
+          sessionStorage.clear();
+          localStorage.clear();
+          navigate("/login");
+        }, 2000);
+      } else {
+        setMessage({
+          type: "danger",
+          text: err.response?.data?.message || "Failed to load patient data. Please try again.",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -70,47 +123,106 @@ function EditPatient() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "profile_image" && files && files[0]) {
-      setPreview(URL.createObjectURL(files[0]));
+    
+    // Handle file upload for profile image
+    if (name === "profileImage" && files && files[0]) {
+      const file = files[0];
+      setPreview(URL.createObjectURL(file));
+      
+      // Convert file to base64 for API
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, profileImage: reader.result }));
+      };
+      reader.readAsDataURL(file);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+    
     if (message.text) setMessage({ type: "", text: "" });
   };
 
-  // AXIOS PUT REQUEST
+  // AXIOS PUT REQUEST - update patient profile
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage({ type: "", text: "" });
 
     try {
+      const api = getApi();
+      const patientId = getPatientId();
+      
+      if (!patientId) {
+        setMessage({
+          type: "danger",
+          text: "Patient ID not found. Please login again.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare update data with only required fields as per API
       const updateData = {
         patientName: formData.patientName,
-        phone: formData.phone || null,
-        address: formData.address || null,
+        email: formData.email,
         gender: formData.gender,
-        dateOfBirth: formData.dateOfBirth || null,
         bloodGroup: formData.bloodGroup,
-        familyHistory: formData.familyHistory || null,
+        familyHistory: formData.familyHistory,
+        profileImage: formData.profileImage || null
       };
 
-      const response = await api.put(
-        `/patient/edit-profile/${patientId}`,
-        updateData,
-      ); // AXIOS PUT
+      console.log("Updating patient with ID:", patientId);
+      console.log("Update data:", updateData);
 
-      setMessage({ type: "success", text: "Profile updated successfully!" });
-      fetchPatientData();
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
-    } catch (err) {
-      console.error("Error updating patient:", err);
-      setMessage({
-        type: "danger",
-        text:
-          err.response?.data?.message ||
-          "Failed to update profile. Please try again.",
+      // Send PUT request to update profile with patientId in URL
+      const response = await api.put(`/patient/edit-profile/${patientId}`, updateData);
+
+      console.log("Update response:", response.data);
+
+      setMessage({ 
+        type: "success", 
+        text: response.data?.message || "Profile updated successfully! Redirecting to dashboard..." 
       });
+      
+      // Refresh data after successful update
+      fetchPatientData();
+      
+      // Navigate back to dashboard after 2 seconds
+      setTimeout(() => {
+        setMessage({ type: "", text: "" });
+        navigate("/patient/");
+      }, 2000);
+      
+    } catch (err) {
+      console.error("Error updating patient profile:", err);
+      
+      if (err.response?.status === 401) {
+        setMessage({
+          type: "danger",
+          text: "Session expired. Please login again.",
+        });
+        setTimeout(() => {
+          sessionStorage.clear();
+          localStorage.clear();
+          navigate("/login");
+        }, 2000);
+      } else if (err.response?.status === 400) {
+        setMessage({
+          type: "warning",
+          text: err.response.data?.message || "Please check your input data.",
+        });
+      } else if (err.response?.status === 404) {
+        setMessage({
+          type: "danger",
+          text: "Patient not found. Please login again.",
+        });
+        setTimeout(() => navigate("/login"), 2000);
+      } else {
+        setMessage({
+          type: "danger",
+          text: err.response?.data?.message || "Failed to update profile. Please try again.",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -122,6 +234,7 @@ function EditPatient() {
   };
 
   const formatBloodGroup = (bg) => {
+    if (!bg) return "";
     return bg
       .replace("_", "+")
       .replace("POSITIVE", "+")
@@ -150,7 +263,7 @@ function EditPatient() {
         <div className="container py-4">
           <div className="text-center py-5">
             <div className="spinner-border text-primary" role="status"></div>
-            <p className="mt-3">Loading patient data...</p>
+            <p className="mt-3">Loading your profile...</p>
           </div>
         </div>
       </div>
@@ -166,9 +279,9 @@ function EditPatient() {
         <div className="row mb-4 align-items-center">
           <div className="col">
             <h1 className="h2 fw-bold text-primary">
-              Edit Profile Information
+              Edit Your Profile
             </h1>
-            <p className="text-muted">Update your personal details below</p>
+            <p className="text-muted">Update your personal details</p>
           </div>
           <div className="col-auto">
             <div
@@ -179,6 +292,9 @@ function EditPatient() {
                 src={preview}
                 className="w-100 h-100 object-fit-cover"
                 alt="Profile"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/80/4a6fa5/ffffff?text=P";
+                }}
               />
             </div>
           </div>
@@ -189,12 +305,15 @@ function EditPatient() {
             className={`alert alert-${message.type} alert-dismissible fade show mb-4`}
             role="alert"
           >
-            {message.text}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setMessage({ type: "", text: "" })}
-            ></button>
+            <div className="d-flex align-items-center">
+              <span className="flex-grow-1">{message.text}</span>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setMessage({ type: "", text: "" })}
+                aria-label="Close"
+              ></button>
+            </div>
           </div>
         )}
 
@@ -227,15 +346,18 @@ function EditPatient() {
                 </div>
 
                 <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Contact Number</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    name="phone"
-                    value={formData.phone || ""}
+                  <label className="form-label fw-medium">Gender *</label>
+                  <select
+                    className="form-select"
+                    name="gender"
+                    value={formData.gender}
                     onChange={handleChange}
-                    placeholder="Enter phone number"
-                  />
+                    required
+                  >
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
                 </div>
 
                 <div className="col-md-6 mb-3">
@@ -264,44 +386,6 @@ function EditPatient() {
                 </div>
 
                 <div className="col-12 mb-3">
-                  <label className="form-label fw-medium">Address</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="address"
-                    value={formData.address || ""}
-                    onChange={handleChange}
-                    placeholder="Enter your address"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Gender *</label>
-                  <select
-                    className="form-select"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Date of Birth</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth || ""}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="col-12 mb-3">
                   <label className="form-label fw-medium">Family History</label>
                   <textarea
                     className="form-control"
@@ -318,45 +402,69 @@ function EditPatient() {
                   <input
                     type="file"
                     className="form-control"
-                    name="profile_image"
+                    name="profileImage"
                     accept="image/*"
                     onChange={handleChange}
                   />
                   <small className="text-muted">
-                    Note: Image upload depends on backend implementation
+                    Upload a new profile image (optional)
                   </small>
                 </div>
               </div>
 
-              <div className="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+              <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
-                  onClick={handleCancel}
+                  onClick={() => navigate("/patient/")}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  <i className="bi bi-arrow-left me-1"></i>
+                  Back to Dashboard
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary px-4"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      ></span>
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </button>
+                <div className="d-flex gap-3">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={handleCancel}
+                    disabled={isSubmitting}
+                  >
+                    Reset Changes
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        ></span>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle me-2"></i>
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
+        </div>
+
+        {/* Debug info - Remove in production */}
+        <div className="mt-4 small text-muted">
+          <p className="mb-1">
+            <strong>Debug Info:</strong> Patient ID: {getPatientId()}
+          </p>
+          <p className="mb-0">
+            <strong>API Endpoint:</strong> PUT {API_BASE_URL}/patient/edit-profile/{getPatientId()}
+          </p>
         </div>
       </div>
     </div>

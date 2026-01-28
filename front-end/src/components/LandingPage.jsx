@@ -7,7 +7,7 @@ const LandingPage = () => {
       <nav className="navbar navbar-expand-lg navbar-dark fixed-top" style={{ backgroundColor: "#48b575" }}>
         <div className="container">
           <a className="navbar-brand fw-bold fs-3" href="#top" style={{ color: "#ffffff" }}>
-            E-MED
+            DocLink
           </a>
           
           <div className="collapse navbar-collapse" id="navbarNav">
@@ -99,7 +99,7 @@ const LandingPage = () => {
       <section id="features" className="py-5" style={{ background: "#ffffff" }}>
         <div className="container py-5">
           <div className="text-center mb-5">
-            <h2 className="fw-bold mb-3" style={{ color: "#2c3e50" }}>Why Choose E-MED</h2>
+            <h2 className="fw-bold mb-3" style={{ color: "#2c3e50" }}>Why Choose DocLink</h2>
             <p style={{ color: "#7f8c8d" }}>Simple, Fast & Reliable Healthcare</p>
           </div>
           
@@ -198,7 +198,7 @@ const LandingPage = () => {
                 <span style={{ color: "#48b575" }}>Our Priority</span>
               </h2>
               <p className="mb-4" style={{ color: "#34495e" }}>
-                E-MED connects patients with healthcare providers through a seamless digital platform. 
+                DocLink connects patients with healthcare providers through a seamless digital platform. 
                 We make healthcare accessible, efficient, and convenient for everyone.
               </p>
               <a href="/signup" className="btn btn-success px-4" style={{ backgroundColor: "#48b575", border: "none", borderRadius: "8px", fontWeight: "600" }}>
@@ -305,7 +305,7 @@ const LandingPage = () => {
         <div className="container">
           <div className="row">
             <div className="col-md-4 mb-4">
-              <h5 className="fw-bold mb-3" style={{ color: "#ffffff" }}>E-MED</h5>
+              <h5 className="fw-bold mb-3" style={{ color: "#ffffff" }}>DocLink</h5>
               <p className="small" style={{ color: "#bdc3c7", lineHeight: "1.6" }}>
                 Making healthcare accessible and convenient through technology.
               </p>
@@ -347,7 +347,7 @@ const LandingPage = () => {
           
           <div className="border-top mt-4 pt-4 text-center" style={{ borderColor: "#4a6572 !important" }}>
             <small style={{ color: "#95a5a6" }}>
-              © 2026 E-MED. All rights reserved.
+              © 2026 DocLink. All rights reserved.
             </small>
           </div>
         </div>
