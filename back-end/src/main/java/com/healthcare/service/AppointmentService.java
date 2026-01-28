@@ -20,4 +20,5 @@ public interface AppointmentService {
     List<PatientAppointmentResponseDto> getPatientAppointments(Long patientId);
     
     DoctorAvailabilityResponse getAvailableSlotsForDoctor(Long doctorId);
+	Appointment markAppointmentCompleted(Long appointmentId);
 }

@@ -53,7 +53,8 @@ public class SecurityConfiguration {
 
                 .requestMatchers(
                     HttpMethod.POST,
-                    "/doctor/holiday/**"
+                    "/doctor/holiday/**",
+                    "/doctor/complete/**"
                 ).hasAuthority("ROLE_DOCTOR")
 
                 .requestMatchers(

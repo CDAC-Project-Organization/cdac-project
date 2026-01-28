@@ -253,7 +253,7 @@ const Registration = () => {
                 Patient Registration
               </h2>
               <p className="text-muted mb-0">
-                Create your E-Med Patient account
+                Create your DocLink Patient account
               </p>
             </div>
 
@@ -608,7 +608,7 @@ const Registration = () => {
       >
         <div className="container text-center">
           <small style={{ color: "#95a5a6" }}>
-            © 2026 E-MED Healthcare. All rights reserved.
+            © 2026 DocLink Healthcare. All rights reserved.
           </small>
         </div>
       </footer>

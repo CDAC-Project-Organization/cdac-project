@@ -244,6 +244,32 @@ const PatientDashboard = () => {
     }
   };
 
+  // Helper function to check if a slot is in the past for today
+  const isSlotInPast = (slotDate, slotStartTime) => {
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    
+    // If slot is not for today, it's not in the past
+    if (slotDate !== today) {
+      return false;
+    }
+    
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    
+    // Parse slot start time
+    const [slotHours, slotMinutes] = slotStartTime.split(':').map(Number);
+    
+    // Compare current time with slot time
+    if (slotHours < currentHours) {
+      return true;
+    } else if (slotHours === currentHours && slotMinutes <= currentMinutes) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const fetchAvailableSlots = async (doctorId) => {
     setLoading((prev) => ({ ...prev, slots: true }));
     setGroupedSlots({});
@@ -271,8 +297,12 @@ const PatientDashboard = () => {
             endTime: slot.endTime,
             originalSlot: slot,
           };
-          if (!grouped[slot.date]) grouped[slot.date] = [];
-          grouped[slot.date].push(formattedSlot);
+          
+          // Filter out past slots for today
+          if (!isSlotInPast(slot.date, slot.startTime)) {
+            if (!grouped[slot.date]) grouped[slot.date] = [];
+            grouped[slot.date].push(formattedSlot);
+          }
         });
         setGroupedSlots(grouped);
       }

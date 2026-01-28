@@ -133,7 +133,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                         patientId,
                         List.of(
                                 AppointmentStatus.BOOKED,
-                                AppointmentStatus.CANCELLED
+                                AppointmentStatus.CANCELLED,
+                                AppointmentStatus.COMPLETED
                         )
                 );
 
@@ -266,6 +267,22 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
     
+    
+    public Appointment markAppointmentCompleted(Long appointmentId) {
+    	
+    	System.out.println("hello");
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
+
+        // Optional safety check
+//        if (appointment.getStatus() != AppointmentStatus.BOOKED || appointment.getStatus()!= AppointmentStatus.COMPLETED ) {
+//            throw new RuntimeException("Only BOOKED appointments can be completed");
+//        }
+
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+
+        return appointmentRepository.save(appointment);
+    }
     
     
     

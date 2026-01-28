@@ -9,7 +9,8 @@ const DoctorDashboard = () => {
   const [doctorInfo, setDoctorInfo] = useState(null);
   const [loading, setLoading] = useState({
     dashboard: true,
-    cancel: false
+    cancel: false,
+    complete: false
   });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -17,6 +18,18 @@ const DoctorDashboard = () => {
   // Get JWT token from session storage
   const getToken = () => {
     return sessionStorage.getItem("jwtToken");
+  };
+
+  // Get API instance with token
+  const getApi = () => {
+    const token = getToken();
+    return axios.create({
+      baseURL: "http://localhost:8080",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
   };
 
   // Fetch doctor information
@@ -118,6 +131,35 @@ const DoctorDashboard = () => {
       alert("Failed to cancel appointment. Please try again.");
     } finally {
       setLoading(prev => ({ ...prev, cancel: false }));
+    }
+  };
+
+  // Complete appointment
+  const handleCompleteAppointment = async (appointmentId) => {
+    if (!window.confirm("Mark this appointment as completed?")) {
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, complete: true }));
+    try {
+      const api = getApi();
+      await api.put(`/doctor/complete/${appointmentId}`);
+
+      // Update appointment status in local state
+      setAppointments(prevAppointments =>
+        prevAppointments.map(appt =>
+          appt.appointmentId === appointmentId
+            ? { ...appt, status: "COMPLETED" }
+            : appt
+        )
+      );
+
+      alert("Appointment marked as completed!");
+    } catch (err) {
+      console.error("Error completing appointment:", err);
+      alert("Failed to complete appointment. Please try again.");
+    } finally {
+      setLoading(prev => ({ ...prev, complete: false }));
     }
   };
 
@@ -379,16 +421,41 @@ const DoctorDashboard = () => {
                         </span>
                       </td>
                       <td>
-                        {appt.status === "BOOKED" && (
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleCancelAppointment(appt.appointmentId)}
-                            disabled={loading.cancel}
-                          >
-                            <i className="bi bi-x-circle me-1"></i>
-                            Cancel
-                          </button>
-                        )}
+                        <div className="d-flex gap-2">
+                          {/* Show Complete button only for BOOKED appointments */}
+                          {appt.status === "BOOKED" && (
+                            <>
+                              <button
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() => handleCompleteAppointment(appt.appointmentId)}
+                                disabled={loading.complete}
+                              >
+                                {loading.complete ? (
+                                  <span className="spinner-border spinner-border-sm me-1"></span>
+                                ) : (
+                                  <i className="bi bi-check-circle me-1"></i>
+                                )}
+                                Complete
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => handleCancelAppointment(appt.appointmentId)}
+                                disabled={loading.cancel}
+                              >
+                                {loading.cancel ? (
+                                  <span className="spinner-border spinner-border-sm me-1"></span>
+                                ) : (
+                                  <i className="bi bi-x-circle me-1"></i>
+                                )}
+                                Cancel
+                              </button>
+                            </>
+                          )}
+                          {/* Show message for non-BOOKED appointments */}
+                          {(appt.status === "CANCELLED" || appt.status === "COMPLETED") && (
+                            <span className="text-muted small">No actions</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

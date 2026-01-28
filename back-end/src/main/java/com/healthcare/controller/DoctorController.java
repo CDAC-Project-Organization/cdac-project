@@ -19,8 +19,10 @@ import com.healthcare.dtos.DoctorHolidayResponseDTO;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
+import com.healthcare.entities.Appointment;
 import com.healthcare.entities.DoctorHoliday;
 import com.healthcare.security.UserPrincipal;
+import com.healthcare.service.AppointmentService;
 import com.healthcare.service.DoctorService;
 
 import jakarta.validation.Valid;
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class DoctorController {
 	
 	private final DoctorService doctorService;
+	private final AppointmentService appointmentService;
 	
 	
 	@GetMapping("/findAllDoctors")
@@ -107,7 +110,19 @@ public class DoctorController {
 		    return ResponseEntity.ok(response);
 	    }
 	
-	
+	   @PutMapping("/complete/{appointmentId}")
+	   public ResponseEntity<ApiResponse> completeAppointment(
+	           @PathVariable Long appointmentId) {
+
+	       appointmentService.markAppointmentCompleted(appointmentId);
+
+	       ApiResponse response = new ApiResponse(
+	               "SUCCESS",
+	               "Appointment marked as COMPLETED successfully"
+	       );
+
+	       return ResponseEntity.ok(response);
+	   }
 	
 	
 }

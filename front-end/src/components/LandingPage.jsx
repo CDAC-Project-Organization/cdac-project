@@ -324,7 +324,7 @@ const LandingPage = () => {
             <div className="col-md-3 mb-4">
               <h6 className="fw-bold mb-3" style={{ color: "#ffffff" }}>Contact</h6>
               <ul className="list-unstyled small" style={{ color: "#bdc3c7" }}>
-                <li className="mb-2">admin@emed.com</li>
+                <li className="mb-2">admin@DocLink.com</li>
                 <li className="mb-2">+91 9123456780</li>
                 <li>123 pune Street</li>
               </ul>
