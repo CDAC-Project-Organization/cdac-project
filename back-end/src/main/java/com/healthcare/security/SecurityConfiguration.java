@@ -47,7 +47,8 @@ public class SecurityConfiguration {
                     "/patient/addPatient",
                     "/admin/create",
                     "/admin/byUser",
-                    "/doctor/findAllDoctors"
+                    "/doctor/findAllDoctors",
+                    "/patient/AllPatients"
                 ).permitAll()
 
                 .requestMatchers(
@@ -75,7 +76,7 @@ public class SecurityConfiguration {
                 ).hasAnyAuthority("ROLE_DOCTOR", "ROLE_PATIENT")
 
                 .requestMatchers(
-                    "/patient/AllPatients",
+                    
                     "/patient/**",
                     "/doctor/AddDoctors"
                 ).hasAuthority("ROLE_ADMIN")
