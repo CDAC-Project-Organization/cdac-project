@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.healthcare.dtos.ApiResponse;
+import com.healthcare.dtos.DoctorHolidayRequestDTO;
+import com.healthcare.dtos.DoctorHolidayResponseDTO;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
+import com.healthcare.entities.DoctorHoliday;
 import com.healthcare.security.UserPrincipal;
 import com.healthcare.service.DoctorService;
 
@@ -86,6 +89,23 @@ public class DoctorController {
 	     return ResponseEntity.ok(response);
 	 }
 
+	 
+	   @PostMapping("/holiday/{doctorId}")
+	    public ResponseEntity<?> addDoctorHoliday(
+	            @PathVariable Long doctorId,
+	            @RequestBody DoctorHolidayRequestDTO request
+	    ) {
+		   DoctorHoliday holiday =
+		            doctorService.addDoctorHoliday(doctorId, request);
+
+		    DoctorHolidayResponseDTO response = new DoctorHolidayResponseDTO();
+		    response.setHolidayId(holiday.getHolidayId());
+		    response.setHolidayDate(holiday.getHolidayDate());
+		    response.setReason(holiday.getReason());
+		    response.setDoctorId(holiday.getDoctor().getDoctorId());
+
+		    return ResponseEntity.ok(response);
+	    }
 	
 	
 	

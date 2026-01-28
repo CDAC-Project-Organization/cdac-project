@@ -3,10 +3,12 @@ package com.healthcare.service;
 import java.util.List;
 
 import com.healthcare.dtos.ApiResponse;
+import com.healthcare.dtos.DoctorHolidayRequestDTO;
 import com.healthcare.dtos.DoctorRequestDTO;
 import com.healthcare.dtos.DoctorResponseDTO;
 import com.healthcare.dtos.DoctorUserResponseDTO;
 import com.healthcare.dtos.EditDoctorRequest;
+import com.healthcare.entities.DoctorHoliday;
 
 public interface DoctorService {
 	
@@ -19,4 +21,6 @@ public interface DoctorService {
 	public ApiResponse deleteDoctorById(Long doctorId);
 	
 	public DoctorUserResponseDTO getDoctorByUserId(Long userId);
+	
+	 DoctorHoliday addDoctorHoliday(Long doctorId, DoctorHolidayRequestDTO dto);
 }
