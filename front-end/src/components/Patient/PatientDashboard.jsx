@@ -710,18 +710,18 @@ const PatientDashboard = () => {
                           <div className="row align-items-center">
                             <div className="col-md-8">
                               <div className="d-flex align-items-start">
-                                <div
+                                {/* <div
                                   className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
                                   style={{ width: "50px", height: "50px" }}
                                 >
                                   <i className="bi bi-person-fill"></i>
-                                </div>
+                                </div> */}
                                 <div>
                                   <h6
                                     className="fw-bold mb-1"
                                     style={{ color: "#2c3e50" }}
                                   >
-                                    Dr. {doctor.doctorName}
+                                    {doctor.doctorName}
                                   </h6>
                                   <p className="mb-2 text-muted">
                                     <i className="bi bi-award me-1"></i>
@@ -936,7 +936,7 @@ const PatientDashboard = () => {
                           </td>
                           <td>
                             <strong>
-                              Dr.{" "}
+                             {" "}
                               {appointment.doctorName ||
                                 appointment.doctor?.doctorName ||
                                 "N/A"}

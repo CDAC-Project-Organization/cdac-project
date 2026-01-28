@@ -17,6 +17,7 @@ import EditDoctor from "./components/Admin/EditDoctor";
 import Appointments from "./components/Admin/Appointments ";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorPage from "./components/ErrorPage";
+import AddHoliday from "./components/Doctor/AddHoliday";
 
 function App() {
   return (
@@ -114,6 +115,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+          <Route
+            path="/doctor/holiday"
+            element={
+              <ProtectedRoute requiredRole="doctor">
+                <AddHoliday />
+              </ProtectedRoute>
+            }
+          />
 
         {/* Catch-all route for undefined paths */}
         <Route path="*" element={<ErrorPage />} />

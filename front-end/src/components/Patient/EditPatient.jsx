@@ -191,7 +191,7 @@ function EditPatient() {
       setTimeout(() => {
         setMessage({ type: "", text: "" });
         navigate("/patient/");
-      }, 2000);
+      }, 1000);
       
     } catch (err) {
       console.error("Error updating patient profile:", err);
