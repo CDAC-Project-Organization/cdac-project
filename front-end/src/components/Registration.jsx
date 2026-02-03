@@ -15,7 +15,6 @@ const Registration = () => {
     dob: "",
     bloodGroup: "",
     familyHistory: "",
-    profileImage: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -51,6 +50,10 @@ const Registration = () => {
         ...errors,
         [name]: "",
       });
+    }
+    // Clear backend error when user starts typing
+    if (backendError) {
+      setBackendError("");
     }
   };
 
@@ -89,6 +92,17 @@ const Registration = () => {
       newErrors.gender = "Gender is required";
     }
 
+    if (!formData.dob) {
+      newErrors.dob = "Date of birth is required";
+    } else {
+      // Validate that dob is not in the future
+      const dobDate = new Date(formData.dob);
+      const today = new Date();
+      if (dobDate > today) {
+        newErrors.dob = "Date of birth cannot be in the future";
+      }
+    }
+
     return newErrors;
   };
 
@@ -105,24 +119,19 @@ const Registration = () => {
     setIsSubmitting(true);
 
     try {
-      // Prepare data - DO NOT format the date, send it as-is from the form
-      // The browser's date input already provides YYYY-MM-DD format
       const backendData = {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         phone: formData.phone,
         gender: genderMap[formData.gender] || "",
-        dob: formData.dob || null, // Send as-is or null if empty
+        dob: formData.dob || null,
         bloodGroup: formData.bloodGroup
           ? bloodGroupMap[formData.bloodGroup]
           : null,
         familyHistory: formData.familyHistory?.trim() || null,
-        profileImage: formData.profileImage?.trim() || null,
       };
 
-      // For debugging: Log the exact data being sent
-      console.log("Form Data DOB value:", formData.dob);
       console.log("Sending to backend:", JSON.stringify(backendData, null, 2));
 
       const response = await axios.post(
@@ -150,11 +159,8 @@ const Registration = () => {
       console.error("Registration error details:", error);
 
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         console.error("Response data:", error.response.data);
         console.error("Response status:", error.response.status);
-        console.error("Response headers:", error.response.headers);
 
         if (error.response.status === 400) {
           // Handle validation errors from backend
@@ -168,24 +174,24 @@ const Registration = () => {
             setBackendError(error.response.data.message);
           }
         } else if (error.response.status === 409) {
+          // Email already exists
           setBackendError(
-            "Email already exists. Please use a different email.",
+            "This email is already registered. Please use a different email or login instead."
           );
         } else {
           setBackendError(
             error.response.data?.message ||
-              `Registration failed (Status: ${error.response.status})`,
+              `Registration failed (Status: ${error.response.status})`
           );
         }
       } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received:", error.request);
-        setBackendError("No response from server. Please try again.");
+        setBackendError("No response from server. Please check your internet connection and try again.");
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Request setup error:", error.message);
         setBackendError("Registration failed. Please try again.");
       }
+      
+      // Scroll to top to show error message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);
     }
@@ -263,14 +269,27 @@ const Registration = () => {
             >
               <Card.Body className="p-4">
                 {successMessage && (
-                  <Alert variant="success" className="rounded-3 mb-4">
+                  <Alert variant="success" className="rounded-3 mb-4" dismissible>
+                    <Alert.Heading>Success!</Alert.Heading>
                     {successMessage}
                   </Alert>
                 )}
 
                 {backendError && (
-                  <Alert variant="danger" className="rounded-3 mb-4">
-                    {backendError}
+                  <Alert variant="danger" className="rounded-3 mb-4" dismissible onClose={() => setBackendError("")}>
+                    <Alert.Heading>Registration Error</Alert.Heading>
+                    <p>{backendError}</p>
+                    {backendError.includes("already registered") && (
+                      <div className="mt-2">
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm"
+                          onClick={() => navigate("/login")}
+                        >
+                          Go to Login
+                        </Button>
+                      </div>
+                    )}
                   </Alert>
                 )}
 
@@ -477,6 +496,7 @@ const Registration = () => {
                             name="dob"
                             value={formData.dob}
                             onChange={handleChange}
+                            isInvalid={!!errors.dob}
                             required
                             style={{
                               padding: "10px",
@@ -484,6 +504,9 @@ const Registration = () => {
                               borderRadius: "8px",
                             }}
                           />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.dob}
+                          </Form.Control.Feedback>
                           <Form.Text className="text-muted">
                             Required for medical records
                           </Form.Text>
@@ -537,27 +560,6 @@ const Registration = () => {
                           borderRadius: "8px",
                         }}
                         placeholder="Enter family medical history (if any)"
-                      />
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                      <Form.Label
-                        className="fw-medium"
-                        style={{ color: "#2c3e50" }}
-                      >
-                        Profile Image URL
-                      </Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="profileImage"
-                        value={formData.profileImage}
-                        onChange={handleChange}
-                        style={{
-                          padding: "10px",
-                          border: "1px solid #e9ecef",
-                          borderRadius: "8px",
-                        }}
-                        placeholder="Enter URL for your profile image (optional)"
                       />
                     </Form.Group>
                   </div>
