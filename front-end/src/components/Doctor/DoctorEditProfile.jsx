@@ -1,4 +1,3 @@
-// src/components/DoctorEditProfile.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -51,6 +50,17 @@ const DoctorEditProfile = () => {
       const doctorData = response.data;
       setDoctorId(doctorData.doctorId);
       
+      // Format time to HH:MM (remove seconds if present)
+      const formatTime = (time) => {
+        if (!time) return "";
+        // If time is in HH:MM:SS format, extract HH:MM
+        if (time.includes(':')) {
+          const parts = time.split(':');
+          return `${parts[0]}:${parts[1]}`; // Keep only hours and minutes
+        }
+        return time;
+      };
+      
       // Map backend data to form fields
       setFormData({
         doctorName: doctorData.name || "",
@@ -59,8 +69,8 @@ const DoctorEditProfile = () => {
         location: doctorData.location || "",
         experience: doctorData.experience?.toString() || "",
         fees: doctorData.fees?.toString() || "",
-        startTime: doctorData.startTime || "",
-        endTime: doctorData.endTime || "",
+        startTime: formatTime(doctorData.startTime) || "",
+        endTime: formatTime(doctorData.endTime) || "",
       });
       
       return doctorData;
@@ -102,6 +112,21 @@ const DoctorEditProfile = () => {
     }
   };
 
+  const validateTime = (time) => {
+    // Validate HH:MM format
+    if (!time.trim()) return false;
+    
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(time)) return false;
+    
+    // Check if minutes are valid (00-59)
+    const [hours, minutes] = time.split(':').map(Number);
+    if (hours < 0 || hours > 23) return false;
+    if (minutes < 0 || minutes > 59) return false;
+    
+    return true;
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -124,25 +149,27 @@ const DoctorEditProfile = () => {
       newErrors.experience = "Experience must be a whole number";
     }
     
-    // Validate time format
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    // Validate start time (HH:MM format)
     if (!formData.startTime.trim()) {
       newErrors.startTime = "Start time is required";
-    } else if (!timeRegex.test(formData.startTime)) {
-      newErrors.startTime = "Start time must be in HH:MM format (24-hour)";
+    } else if (!validateTime(formData.startTime)) {
+      newErrors.startTime = "Start time must be in HH:MM format (24-hour, e.g., 09:00, 14:30)";
     }
     
+    // Validate end time (HH:MM format)
     if (!formData.endTime.trim()) {
       newErrors.endTime = "End time is required";
-    } else if (!timeRegex.test(formData.endTime)) {
-      newErrors.endTime = "End time must be in HH:MM format (24-hour)";
-    } else if (formData.startTime && formData.endTime) {
-      const start = formData.startTime.split(':').map(Number);
-      const end = formData.endTime.split(':').map(Number);
-      const startMinutes = start[0] * 60 + start[1];
-      const endMinutes = end[0] * 60 + end[1];
+    } else if (!validateTime(formData.endTime)) {
+      newErrors.endTime = "End time must be in HH:MM format (24-hour, e.g., 17:00, 21:30)";
+    } else if (validateTime(formData.startTime) && validateTime(formData.endTime)) {
+      // Convert times to minutes for comparison
+      const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
+      const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
       
-      if (endMinutes <= startMinutes) {
+      const startTotalMinutes = startHours * 60 + startMinutes;
+      const endTotalMinutes = endHours * 60 + endMinutes;
+      
+      if (endTotalMinutes <= startTotalMinutes) {
         newErrors.endTime = "End time must be after start time";
       }
     }
@@ -168,6 +195,11 @@ const DoctorEditProfile = () => {
         return;
       }
 
+      // Format time to include seconds for backend (HH:MM:00)
+      const formatTimeForBackend = (time) => {
+        return time + ":00";
+      };
+
       // Prepare data for backend
       const updateData = {
         doctorId: doctorId,
@@ -177,8 +209,8 @@ const DoctorEditProfile = () => {
         location: formData.location,
         experience: parseInt(formData.experience, 10),
         fees: parseFloat(formData.fees),
-        startTime: formData.startTime,
-        endTime: formData.endTime
+        startTime: formatTimeForBackend(formData.startTime),
+        endTime: formatTimeForBackend(formData.endTime)
       };
 
       const response = await axios.put(
@@ -193,10 +225,14 @@ const DoctorEditProfile = () => {
         }
       );
 
-      setSuccess(response.data.message || "Profile updated successfully!");
+      setSuccess(response.data.message || "Profile updated successfullyy!");
       
       // Refresh doctor data after successful update
       await fetchDoctorInfo();
+    setTimeout(() => {
+    navigate("/doctor");
+    }, 1000);
+      
 
     } catch (err) {
       console.error("Error updating profile:", err);
@@ -377,38 +413,38 @@ const DoctorEditProfile = () => {
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>Start Time (24-hour format) *</Form.Label>
+                    <Form.Label>Start Time *</Form.Label>
                     <Form.Control
                       type="text"
                       name="startTime"
                       value={formData.startTime}
                       onChange={handleChange}
                       isInvalid={!!errors.startTime}
-                      placeholder="e.g., 09:00"
+                      placeholder="HH:MM (e.g., 09:00)"
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.startTime}
                     </Form.Control.Feedback>
                     <Form.Text className="text-muted">
-                      Format: HH:MM (24-hour)
+                      24-hour format, hours: 00-23, minutes: 00-59
                     </Form.Text>
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>End Time (24-hour format) *</Form.Label>
+                    <Form.Label>End Time *</Form.Label>
                     <Form.Control
                       type="text"
                       name="endTime"
                       value={formData.endTime}
                       onChange={handleChange}
                       isInvalid={!!errors.endTime}
-                      placeholder="e.g., 17:00"
+                      placeholder="HH:MM (e.g., 17:00)"
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.endTime}
                     </Form.Control.Feedback>
                     <Form.Text className="text-muted">
-                      Format: HH:MM (24-hour)
+                      24-hour format, must be after start time
                     </Form.Text>
                   </Form.Group>
                 </div>
@@ -433,7 +469,6 @@ const DoctorEditProfile = () => {
             </Form>
           </Card.Body>
         </Card>
-     
       </Container>
     </div>
   );

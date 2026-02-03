@@ -6,9 +6,31 @@ const PatientNavbar = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem("isAuthenticated");
-        localStorage.removeItem("currentUser");
-        navigate("/login");
+        // Clear ALL storage items from both localStorage and sessionStorage
+        const storageKeys = [
+            'jwtToken', 'currentUser', 'isAuthenticated', 
+            'userRole', 'patientId', 'userId', 'token', 'user'
+        ];
+        
+        storageKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        });
+        
+        // Clear all localStorage and sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Replace history entry with login page
+        window.history.replaceState(null, "", "/login");
+        
+        // Navigate with replace to prevent going back
+        navigate("/login", { replace: true });
+        
+        // Force reload to clear React state
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
     };
 
     return (
@@ -20,9 +42,9 @@ const PatientNavbar = () => {
         >
             <Container>
                 <Navbar.Brand 
-                    href="/patient" 
+                    onClick={() => navigate("/patient")} 
                     className="fw-bold fs-4" 
-                    style={{ color: "#ffffff" }}
+                    style={{ color: "#ffffff", cursor: "pointer" }}
                 >
                     DocLink Patient
                 </Navbar.Brand>
@@ -32,16 +54,16 @@ const PatientNavbar = () => {
                 <Navbar.Collapse id="patientNavbar">
                     <Nav className="me-auto mb-2 mb-lg-0">
                         <Nav.Link 
-                            href="/patient" 
+                            onClick={() => navigate("/patient")} 
                             className="fw-medium" 
-                            style={{ color: "#e8f5e9" }}
+                            style={{ color: "#e8f5e9", cursor: "pointer" }}
                         >
                             Dashboard
                         </Nav.Link>
                         <Nav.Link 
-                            href="/patient/FeedbackPage" 
+                            onClick={() => navigate("/patient/FeedbackPage")} 
                             className="fw-medium" 
-                            style={{ color: "#e8f5e9" }}
+                            style={{ color: "#e8f5e9", cursor: "pointer" }}
                         >
                             Feedback
                         </Nav.Link>

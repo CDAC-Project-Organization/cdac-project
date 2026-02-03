@@ -41,6 +41,23 @@ const AddDoctor = () => {
     "Psychiatrist",
   ];
 
+  // Function to get JWT token from session storage
+  const getToken = () => {
+    return sessionStorage.getItem("jwtToken");
+  };
+
+  // Function to get axios instance with JWT token
+  const getApi = () => {
+    const token = getToken();
+    return axios.create({
+      baseURL: "http://localhost:8080",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -97,6 +114,16 @@ const AddDoctor = () => {
       return;
     }
 
+    // Check if user is authenticated
+    const token = getToken();
+    if (!token) {
+      setApiError("You are not authenticated. Please login first.");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
     setLoading(true);
     setApiError("");
     setApiSuccess("");
@@ -117,15 +144,10 @@ const AddDoctor = () => {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:8080/doctor/AddDoctors",
-        doctorData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            accept: "*/*",
-          },
-        },
+      const api = getApi();
+      const response = await api.post(
+        "/doctor/AddDoctors",
+        doctorData
       );
 
       if (response.data.status === "Success") {
@@ -156,7 +178,14 @@ const AddDoctor = () => {
       if (error.response) {
         // Server responded with error
         const errorData = error.response.data;
-        if (
+        
+        // Handle authentication errors
+        if (error.response.status === 401 || error.response.status === 403) {
+          setApiError("Authentication failed. Please login again.");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        } else if (
           errorData.status === "Failed" &&
           errorData.message.includes("Email already exists")
         ) {

@@ -12,25 +12,22 @@ function EditPatient() {
     gender: "MALE",
     bloodGroup: "A_POSITIVE",
     familyHistory: "",
-    profileImage: ""
+    profileImage: "" // Keep this field for API compatibility
   });
 
-  const [preview, setPreview] = useState(
-    "https://via.placeholder.com/80/4a6fa5/ffffff?text=P",
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   // AXIOS CONFIGURATION
   const API_BASE_URL = "http://localhost:8080";
 
-  // Get JWT token and patient ID from session storage (same as PatientDashboard)
+  // Get JWT token and patient ID from session storage
   const getToken = () => sessionStorage.getItem("jwtToken");
   const getPatientId = () => {
     return sessionStorage.getItem("patientId") || localStorage.getItem("patientId");
   };
 
-  // Create authenticated axios instance (same as PatientDashboard)
+  // Create authenticated axios instance
   const getApi = () => {
     const token = getToken();
     if (!token) {
@@ -47,7 +44,6 @@ function EditPatient() {
 
   // Fetch patient data for logged-in user
   useEffect(() => {
-    // Check authentication (same as PatientDashboard)
     const isAuthenticated = sessionStorage.getItem("isAuthenticated");
     const userRole = sessionStorage.getItem("userRole");
     const token = getToken();
@@ -61,7 +57,7 @@ function EditPatient() {
     fetchPatientData();
   }, [navigate]);
 
-  // Fetch current patient data using JWT token (same as PatientDashboard)
+  // Fetch current patient data
   const fetchPatientData = async () => {
     setLoading(true);
     setMessage({ type: "", text: "" });
@@ -69,13 +65,13 @@ function EditPatient() {
     try {
       const api = getApi();
       
-      // Fetch patient data using JWT token (same as PatientDashboard)
+      // Fetch patient data
       const response = await api.get("/patient/byUser");
       const patient = response.data;
 
-      console.log("Fetched patient data from /patient/byUser:", patient);
+      console.log("Fetched patient data:", patient);
 
-      // Populate form with fetched data (only required fields as per API)
+      // Populate form with fetched data
       setFormData({
         patientName: patient.patientName || "",
         email: patient.email || "",
@@ -85,16 +81,11 @@ function EditPatient() {
         profileImage: patient.profileImage || ""
       });
 
-      // Store patient ID in session storage (same as PatientDashboard)
+      // Store patient ID in session storage
       if (patient.patientId) {
         sessionStorage.setItem("patientId", patient.patientId);
         localStorage.setItem("patientId", patient.patientId);
         console.log("Stored patientId:", patient.patientId);
-      }
-
-      // Set profile image preview if available
-      if (patient.profileImage) {
-        setPreview(`${API_BASE_URL}${patient.profileImage}`);
       }
 
     } catch (err) {
@@ -122,27 +113,13 @@ function EditPatient() {
   };
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    
-    // Handle file upload for profile image
-    if (name === "profileImage" && files && files[0]) {
-      const file = files[0];
-      setPreview(URL.createObjectURL(file));
-      
-      // Convert file to base64 for API
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, profileImage: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     
     if (message.text) setMessage({ type: "", text: "" });
   };
 
-  // AXIOS PUT REQUEST - update patient profile
+  // Update patient profile
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -161,37 +138,33 @@ function EditPatient() {
         return;
       }
 
-      // Prepare update data with only required fields as per API
+      // Prepare update data according to API requirements
       const updateData = {
         patientName: formData.patientName,
         email: formData.email,
         gender: formData.gender,
         bloodGroup: formData.bloodGroup,
         familyHistory: formData.familyHistory,
-        profileImage: formData.profileImage || null
+        profileImage: formData.profileImage || "" // Send empty string if no image
       };
 
       console.log("Updating patient with ID:", patientId);
       console.log("Update data:", updateData);
 
-      // Send PUT request to update profile with patientId in URL
+      // Send PUT request to update profile
       const response = await api.put(`/patient/edit-profile/${patientId}`, updateData);
 
       console.log("Update response:", response.data);
 
       setMessage({ 
         type: "success", 
-        text: response.data?.message || "Profile updated successfully! Redirecting to dashboard..." 
+        text: response.data?.message || "Profile updated successfully!" 
       });
       
-      // Refresh data after successful update
-      fetchPatientData();
-      
-      // Navigate back to dashboard after 2 seconds
+      // Navigate back to dashboard after successful update
       setTimeout(() => {
-        setMessage({ type: "", text: "" });
-        navigate("/patient/");
-      }, 1000);
+        navigate("/patient");
+      }, 1500);
       
     } catch (err) {
       console.error("Error updating patient profile:", err);
@@ -234,11 +207,12 @@ function EditPatient() {
   };
 
   const formatBloodGroup = (bg) => {
-    if (!bg) return "";
+    if (!bg) return "Not Specified";
+    // Convert A_POSITIVE to A+, B_NEGATIVE to B-, etc.
     return bg
-      .replace("_", "+")
-      .replace("POSITIVE", "+")
-      .replace("NEGATIVE", "-");
+      .replace("_POSITIVE", "+")
+      .replace("_NEGATIVE", "-")
+      .replace("_", " ");
   };
 
   const parseBloodGroup = (displayBg) => {
@@ -252,7 +226,7 @@ function EditPatient() {
       "AB+": "AB_POSITIVE",
       "AB-": "AB_NEGATIVE",
     };
-    return map[displayBg] || "A_POSITIVE";
+    return map[displayBg] || formData.bloodGroup;
   };
 
   if (loading) {
@@ -276,195 +250,174 @@ function EditPatient() {
       <div style={{ paddingTop: "80px" }}></div>
 
       <div className="container py-4">
-        <div className="row mb-4 align-items-center">
-          <div className="col">
-            <h1 className="h2 fw-bold text-primary">
-              Edit Your Profile
-            </h1>
-            <p className="text-muted">Update your personal details</p>
-          </div>
-          <div className="col-auto">
-            <div
-              className="rounded-circle border border-3 border-white shadow"
-              style={{ width: "80px", height: "80px", overflow: "hidden" }}
-            >
-              <img
-                src={preview}
-                className="w-100 h-100 object-fit-cover"
-                alt="Profile"
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/80/4a6fa5/ffffff?text=P";
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {message.text && (
-          <div
-            className={`alert alert-${message.type} alert-dismissible fade show mb-4`}
-            role="alert"
-          >
-            <div className="d-flex align-items-center">
-              <span className="flex-grow-1">{message.text}</span>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setMessage({ type: "", text: "" })}
-                aria-label="Close"
-              ></button>
-            </div>
-          </div>
-        )}
-
-        <div className="card shadow">
-          <div className="card-body p-4">
-            <form onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Full Name *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="patientName"
-                    value={formData.patientName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Email Address</label>
-                  <input
-                    type="email"
-                    className="form-control bg-light"
-                    value={formData.email}
-                    disabled
-                    readOnly
-                  />
-                  <small className="text-muted">Email cannot be changed</small>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Gender *</label>
-                  <select
-                    className="form-select"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-medium">Blood Group</label>
-                  <select
-                    className="form-select"
-                    name="bloodGroup"
-                    value={formatBloodGroup(formData.bloodGroup)}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        bloodGroup: parseBloodGroup(e.target.value),
-                      })
-                    }
-                  >
-                    <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-
-                <div className="col-12 mb-3">
-                  <label className="form-label fw-medium">Family History</label>
-                  <textarea
-                    className="form-control"
-                    name="familyHistory"
-                    value={formData.familyHistory || ""}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Enter any family medical history..."
-                  />
-                </div>
-
-                <div className="col-12 mb-4">
-                  <label className="form-label fw-medium">Profile Image</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    name="profileImage"
-                    accept="image/*"
-                    onChange={handleChange}
-                  />
-                  <small className="text-muted">
-                    Upload a new profile image (optional)
-                  </small>
-                </div>
-              </div>
-
-              <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => navigate("/patient/")}
-                  disabled={isSubmitting}
-                >
-                  <i className="bi bi-arrow-left me-1"></i>
-                  Back to Dashboard
-                </button>
-                <div className="d-flex gap-3">
+        <div className="row">
+          <div className="col-lg-8 mx-auto">
+            <div className="card shadow border-0">
+              <div className="card-header bg-white py-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <h4 className="mb-0 text-success ">
+                      <i className="bi bi-person-gear me-2"></i>
+                      Edit Profile
+                    </h4>
+                    <p className="text-muted mb-0">Update your personal information</p>
+                  </div>
                   <button
                     type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
+                    className="btn btn-outline-success btn-sm"
+                    onClick={() => navigate("/patient")}
                   >
-                    Reset Changes
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary px-4"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                        ></span>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-check-circle me-2"></i>
-                        Save Changes
-                      </>
-                    )}
+                    <i className="bi bi-arrow-left me-1"></i>
+                    Back to Dashboard
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
 
-        {/* Debug info - Remove in production */}
-        <div className="mt-4 small text-muted">
-          <p className="mb-1">
-            <strong>Debug Info:</strong> Patient ID: {getPatientId()}
-          </p>
-          <p className="mb-0">
-            <strong>API Endpoint:</strong> PUT {API_BASE_URL}/patient/edit-profile/{getPatientId()}
-          </p>
+              {message.text && (
+                <div className="m-4">
+                  <div
+                    className={`alert alert-${message.type} alert-dismissible fade show mb-0`}
+                    role="alert"
+                  >
+                    <div className="d-flex align-items-center">
+                      <i className={`bi bi-${message.type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2`}></i>
+                      <span className="flex-grow-1">{message.text}</span>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setMessage({ type: "", text: "" })}
+                        aria-label="Close"
+                      ></button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="card-body p-4">
+                <form onSubmit={handleSubmit}>
+                  <div className="row mb-4">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Full Name <span className="text-danger">*</span></label>
+                      <input
+                        type="text"
+                        className="form-control form-control-lg"
+                        name="patientName"
+                        value={formData.patientName}
+                        onChange={handleChange}
+                        required
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Email Address</label>
+                      <input
+                        type="email"
+                        className="form-control form-control-lg bg-light"
+                        value={formData.email}
+                        disabled
+                        readOnly
+                      />
+                      <small className="text-muted">Email cannot be modified</small>
+                    </div>
+
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Gender <span className="text-danger">*</span></label>
+                      <select
+                        className="form-select form-select-lg"
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Blood Group</label>
+                      <select
+                        className="form-select form-select-lg"
+                        name="bloodGroup"
+                        value={formatBloodGroup(formData.bloodGroup)}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            bloodGroup: parseBloodGroup(e.target.value),
+                          })
+                        }
+                      >
+                        <option value="">Select Blood Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                      </select>
+                      <div className="mt-1">
+                        <small className="text-primary">
+                          <i className="bi bi-info-circle me-1"></i>
+                          Current: <strong>{formatBloodGroup(formData.bloodGroup)}</strong>
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="col-12 mb-3">
+                      <label className="form-label fw-semibold">Family Medical History</label>
+                      <textarea
+                        className="form-control"
+                        name="familyHistory"
+                        value={formData.familyHistory || ""}
+                        onChange={handleChange}
+                        rows="4"
+                        placeholder="Enter any relevant family medical history (diabetes, heart conditions, etc.)"
+                      />
+                     
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-between pt-4 border-top">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={handleCancel}
+                      disabled={isSubmitting}
+                    >
+                      <i className="bi bi-arrow-counterclockwise me-2"></i>
+                      Reset Changes
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn bg-info px-5"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                          ></span>
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-check-circle me-2"></i>
+                          Update Profile
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+          
+          </div>
         </div>
       </div>
     </div>

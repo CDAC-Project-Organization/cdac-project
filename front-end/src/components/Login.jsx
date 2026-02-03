@@ -31,6 +31,7 @@ const Login = () => {
         email: formData.email,
         password: formData.password,
       });
+      console.log(response)
 
       console.log("Login Response:", response.data);
 
@@ -88,7 +89,7 @@ const Login = () => {
         }
       } else if (err.request) {
         setLoginError(
-          "Cannot connect to server. Please check if backend is running on http://localhost:8080",
+          "Server Error !",
         );
       } else {
         setLoginError("An error occurred: " + err.message);

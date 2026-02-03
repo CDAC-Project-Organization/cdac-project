@@ -21,10 +21,36 @@ const AdminNavbar = () => {
     navigate("/admin/addDoctor");
   };
 
+  const handleAllAppointmentClick = () => {
+    navigate("/admin/appointments");
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("token");
-    navigate("/login");
+    // Clear ALL storage items from both localStorage and sessionStorage
+    const storageKeys = [
+      'jwtToken', 'currentUser', 'isAuthenticated', 
+      'userRole', 'adminToken', 'token', 'patientId', 'userId'
+    ];
+    
+    storageKeys.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+    
+    // Clear all localStorage and sessionStorage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Replace history entry with login page
+    window.history.replaceState(null, "", "/login");
+    
+    // Navigate with replace to prevent going back
+    navigate("/login", { replace: true });
+    
+    // Force reload to clear React state
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   return (
@@ -33,14 +59,13 @@ const AdminNavbar = () => {
       style={{ backgroundColor: "#48b575" }}
     >
       <div className="container">
-        <a
-          className="navbar-brand fw-bold fs-4"
-          href="#"
+        <button
+          className="navbar-brand fw-bold fs-4 btn btn-link text-decoration-none p-0 border-0"
           onClick={handleDashboardClick}
           style={{ cursor: "pointer", color: "#ffffff" }}
         >
           DocLink Admin
-        </a>
+        </button>
 
         <button
           className="navbar-toggler"
@@ -87,6 +112,15 @@ const AdminNavbar = () => {
                 style={{ color: "#ffffff" }}
               >
                 Add Doctor
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className="nav-link btn btn-link text-decoration-none fw-medium"
+                onClick={handleAllAppointmentClick}
+                style={{ color: "#ffffff" }}
+              >
+               All Appointments
               </button>
             </li>
           </ul>

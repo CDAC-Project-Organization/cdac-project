@@ -87,7 +87,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                         doctorId,
                         List.of(
                                 AppointmentStatus.BOOKED,
-                                AppointmentStatus.CANCELLED
+                                AppointmentStatus.CANCELLED,
+                                AppointmentStatus.COMPLETED
                         )
                 );
 

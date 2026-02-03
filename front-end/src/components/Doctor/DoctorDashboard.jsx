@@ -264,7 +264,7 @@ const DoctorDashboard = () => {
             </p>
           </div>
           <button
-            className="btn btn-primary"
+            className="btn bg-info"
             onClick={handleAddHoliday}
           >
             <i className="bi bi-calendar-plus me-2"></i>

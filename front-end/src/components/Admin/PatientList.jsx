@@ -1,18 +1,13 @@
-// src/components/admin/PatientList.jsx
 import React, { useState, useEffect } from "react";
 import {
   Table,
-  Button,
   Card,
   Form,
   InputGroup,
   Alert,
   Spinner,
-  Modal,
   Row,
-  Col,
-  Toast,
-  ToastContainer,
+  Col
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -21,22 +16,15 @@ import AdminNavbar from "./AdminNavbar";
 const PatientList = () => {
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
-  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-  const [showAppointmentsModal, setShowAppointmentsModal] = useState(false);
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    variant: "success", // 'success' or 'danger'
-  });
 
   useEffect(() => {
     fetchPatients();
   }, []);
 
-  // Fetch patients from API - Similar to DoctorList
+  // Fetch patients from API
   const fetchPatients = async () => {
     try {
       setLoading(true);
@@ -45,8 +33,6 @@ const PatientList = () => {
         "http://localhost:8080/patient/AllPatients",
       );
 
-      // Assuming the response structure is similar to doctors
-      // Check the actual response structure in console
       console.log("Patients API Response:", response.data);
 
       // Transform the data based on actual response structure
@@ -75,86 +61,8 @@ const PatientList = () => {
     } catch (error) {
       console.error("Error fetching patients:", error);
       setError(error.response?.data?.message || "Failed to fetch patients");
-      setToast({
-        show: true,
-        message: "Failed to fetch patients",
-        variant: "danger",
-      });
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Fetch appointments from API
-  const fetchAppointments = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:8080/Appointments/allAppointments",
-      );
-      console.log("Appointments API Response:", response.data);
-      setAppointments(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-      setToast({
-        show: true,
-        message: "Failed to fetch appointments",
-        variant: "danger",
-      });
-    }
-  };
-
-  // Handle patient deletion
-  const handleDelete = async (patientId, patientName) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete patient: ${patientName}? This action cannot be undone.`,
-      )
-    ) {
-      try {
-        const response = await axios.delete(
-          `http://localhost:8080/patient/${patientId}`,
-        );
-
-        if (response.data.status === "SUCCESS" || response.data.success) {
-          // Remove patient from state
-          setPatients(patients.filter((patient) => patient.id !== patientId));
-
-          // Show success toast
-          setToast({
-            show: true,
-            message: `Patient ${patientName} deleted successfully`,
-            variant: "success",
-          });
-        } else {
-          setToast({
-            show: true,
-            message: response.data.message || "Failed to delete patient",
-            variant: "danger",
-          });
-        }
-      } catch (error) {
-        console.error("Error deleting patient:", error);
-
-        if (error.response) {
-          setToast({
-            show: true,
-            message: error.response.data.message || "Failed to delete patient",
-            variant: "danger",
-          });
-        } else if (error.request) {
-          setToast({
-            show: true,
-            message: "Network error. Please check your connection.",
-            variant: "danger",
-          });
-        } else {
-          setToast({
-            show: true,
-            message: "An error occurred. Please try again.",
-            variant: "danger",
-          });
-        }
-      }
     }
   };
 
@@ -172,28 +80,6 @@ const PatientList = () => {
       {/* Navbar */}
       <AdminNavbar />
 
-      {/* Toast Notification */}
-      <ToastContainer
-        position="top-end"
-        className="p-3"
-        style={{ zIndex: 9999, marginTop: "80px" }}
-      >
-        <Toast
-          show={toast.show}
-          onClose={() => setToast({ ...toast, show: false })}
-          delay={5000}
-          autohide
-          bg={toast.variant}
-        >
-          <Toast.Header closeButton>
-            <strong className="me-auto">
-              {toast.variant === "success" ? "Success" : "Error"}
-            </strong>
-          </Toast.Header>
-          <Toast.Body className="text-white">{toast.message}</Toast.Body>
-        </Toast>
-      </ToastContainer>
-
       <div style={{ paddingTop: "80px" }}></div>
 
       <div className="container py-4">
@@ -205,46 +91,25 @@ const PatientList = () => {
                 Patient Management
               </h2>
               <p className="text-muted mb-0">
-                View and manage all registered patients
+                View all registered patients
               </p>
-            </div>
-            <div className="d-flex gap-2">
-              <Button
-                onClick={() => {
-                  fetchAppointments();
-                  setShowAppointmentsModal(true);
-                }}
-                className="rounded-pill px-4 fw-medium"
-                style={{
-                  backgroundColor: "#3498db",
-                  color: "white",
-                  border: "none",
-                }}
-              >
-                📅 View Appointments
-              </Button>
-              <Button
-                onClick={fetchPatients}
-                disabled={loading}
-                className="rounded-pill px-4 fw-medium"
-                style={{
-                  backgroundColor: "#48b575",
-                  color: "white",
-                  border: "none",
-                }}
-              >
-                {loading ? (
-                  <>
-                    <Spinner size="sm" className="me-2" />
-                    Loading...
-                  </>
-                ) : (
-                  "⟳ Refresh"
-                )}
-              </Button>
             </div>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            variant="danger"
+            className="mb-4"
+            onClose={() => setError(null)}
+            dismissible
+          >
+            <div className="d-flex justify-content-between align-items-center">
+              <span>{error}</span>
+            </div>
+          </Alert>
+        )}
 
         {/* Stats and Search Card */}
         <Row className="mb-4">
@@ -263,10 +128,7 @@ const PatientList = () => {
               </Card.Body>
             </Card>
           </Col>
-          <Col md={6} lg={3}>
-            
-          </Col>
-          <Col md={12} lg={6}>
+          <Col md={12} lg={9}>
             <Card
               className="shadow-sm border-0 h-100"
               style={{ borderRadius: "16px" }}
@@ -282,7 +144,7 @@ const PatientList = () => {
                       border: "1px solid #e9ecef",
                     }}
                   >
-                    🔍
+                    Search
                   </InputGroup.Text>
                   <Form.Control
                     placeholder="Search by name, email, or phone number..."
@@ -290,12 +152,12 @@ const PatientList = () => {
                     onChange={(e) => setSearch(e.target.value)}
                   />
                   {search && (
-                    <Button
-                      variant="outline-secondary"
+                    <button
+                      className="btn btn-outline-secondary"
                       onClick={() => setSearch("")}
                     >
                       Clear
-                    </Button>
+                    </button>
                   )}
                 </InputGroup>
               </Card.Body>
@@ -334,12 +196,12 @@ const PatientList = () => {
                 <p className="mt-3 text-muted">
                   No patients found matching "{search}"
                 </p>
-                <Button
-                  variant="outline-secondary"
+                <button
+                  className="btn btn-outline-secondary"
                   onClick={() => setSearch("")}
                 >
                   Clear Search
-                </Button>
+                </button>
               </div>
             ) : (
               <div className="table-responsive">
@@ -350,10 +212,7 @@ const PatientList = () => {
                       <th>Patient Name</th>
                       <th>Email</th>
                       <th>Gender</th>
-                      
                       <th>Blood Group</th>
-                     
-                      {/* <th className="text-center">Actions</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -375,15 +234,10 @@ const PatientList = () => {
                             {patient.gender}
                           </span>
                         </td>
-                       
                         <td>
                           <span className="badge bg-danger">
                             {patient.bloodGroup}
                           </span>
-                        </td>
-                      
-                        <td>
-                          
                         </td>
                       </tr>
                     ))}
@@ -394,99 +248,6 @@ const PatientList = () => {
           </Card.Body>
         </Card>
       </div>
-
-      {/* Appointments Modal */}
-      <Modal
-        show={showAppointmentsModal}
-        onHide={() => setShowAppointmentsModal(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title style={{ color: "#2c3e50" }}>
-            All Appointments
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {appointments.length === 0 ? (
-            <div className="text-center py-5">
-              <p className="text-muted">No appointments found</p>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <Table hover>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Patient</th>
-                    <th>Doctor</th>
-                    <th>Date & Time</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.map((appointment, index) => (
-                    <tr key={appointment.appointmentId || index}>
-                      <td>#{appointment.appointmentId || index + 1}</td>
-                      <td>
-                        <div className="fw-semibold">
-                          {appointment.patient?.patientName ||
-                            appointment.patientName ||
-                            "N/A"}
-                        </div>
-                        <small className="text-muted">
-                          {appointment.patient?.email ||
-                            appointment.email ||
-                            ""}
-                        </small>
-                      </td>
-                      <td>
-                        <div className="fw-semibold">
-                          {appointment.doctor?.doctorName ||
-                            appointment.doctorName ||
-                            "N/A"}
-                        </div>
-                        <small className="text-muted">
-                          {appointment.doctor?.speciality ||
-                            appointment.speciality ||
-                            ""}
-                        </small>
-                      </td>
-                      <td>
-                        <div className="fw-semibold">
-                          {appointment.appointmentDate
-                            ? new Date(
-                                appointment.appointmentDate,
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </div>
-                        <small className="text-muted">
-                          {appointment.appointmentTime || ""}
-                        </small>
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${appointment.status === "CONFIRMED" || appointment.status === "Confirmed" ? "bg-success" : appointment.status === "PENDING" || appointment.status === "Pending" ? "bg-warning" : "bg-secondary"}`}
-                        >
-                          {appointment.status || "UNKNOWN"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowAppointmentsModal(false)}
-          >
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 };

@@ -6,9 +6,32 @@ const DoctorNavbar = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+        // Clear ALL storage items
+        const storageKeys = [
+            'jwtToken', 'currentUser', 'isAuthenticated', 
+            'userRole', 'token', 'user', 'patientId', 'userId',
+            'doctorId'
+        ];
+        
+        storageKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        });
+        
+        // Clear all localStorage and sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Replace history entry with login page
+        window.history.replaceState(null, "", "/login");
+        
+        // Navigate with replace to prevent going back
+        navigate("/login", { replace: true });
+        
+        // Force reload to clear React state
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
     };
 
     return (
@@ -20,9 +43,9 @@ const DoctorNavbar = () => {
         >
             <Container>
                 <Navbar.Brand 
-                    href="/doctor" 
+                    onClick={() => navigate("/doctor")} 
                     className="fw-bold fs-4" 
-                    style={{ color: "#ffffff" }}
+                    style={{ color: "#ffffff", cursor: "pointer" }}
                 >
                     DocLink Doctor
                 </Navbar.Brand>
@@ -32,13 +55,12 @@ const DoctorNavbar = () => {
                 <Navbar.Collapse id="doctorNavbar">
                     <Nav className="me-auto mb-2 mb-lg-0">
                         <Nav.Link 
-                            href="/doctor" 
+                            onClick={() => navigate("/doctor")} 
                             className="fw-medium" 
-                            style={{ color: "#e8f5e9" }}
+                            style={{ color: "#e8f5e9", cursor: "pointer" }}
                         >
                             Dashboard
                         </Nav.Link>
-                        
                     </Nav>
 
                     <Nav>

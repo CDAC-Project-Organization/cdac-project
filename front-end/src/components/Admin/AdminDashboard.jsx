@@ -64,6 +64,11 @@ const AdminDashboard = () => {
     navigate("/login");
   };
 
+  // Navigate to appointments page
+  const handleViewAppointments = () => {
+    navigate("/admin/appointments");
+  };
+
   return (
     <div
       className="min-vh-100"
@@ -124,8 +129,8 @@ const AdminDashboard = () => {
                           {stats.doctors}
                         </h1>
                         <p className="text-muted mb-3 fs-5">Total Doctors</p>
-                        <a
-                          href="/admin/doctorList"
+                        <button
+                          onClick={() => navigate("/admin/doctorList")}
                           className="btn rounded-pill px-4"
                           style={{
                             backgroundColor: "#48b575",
@@ -135,7 +140,7 @@ const AdminDashboard = () => {
                           }}
                         >
                           View Doctors
-                        </a>
+                        </button>
                       </>
                     )}
                   </Card.Body>
@@ -161,8 +166,8 @@ const AdminDashboard = () => {
                           {stats.patients}
                         </h1>
                         <p className="text-muted mb-3 fs-5">Total Patients</p>
-                        <a
-                          href="/admin/patientList"
+                        <button
+                          onClick={() => navigate("/admin/patientList")}
                           className="btn rounded-pill px-4"
                           style={{
                             backgroundColor: "#48b575",
@@ -172,7 +177,7 @@ const AdminDashboard = () => {
                           }}
                         >
                           View Patients
-                        </a>
+                        </button>
                       </>
                     )}
                   </Card.Body>
@@ -190,8 +195,8 @@ const AdminDashboard = () => {
                   Quick Actions
                 </h5>
                 <div className="d-flex flex-wrap gap-3">
-                  <a
-                    href="/admin/addDoctor"
+                  <button
+                    onClick={() => navigate("/admin/addDoctor")}
                     className="btn rounded-pill px-4 fw-medium"
                     style={{
                       backgroundColor: "#48b575",
@@ -201,9 +206,9 @@ const AdminDashboard = () => {
                     }}
                   >
                     Add New Doctor
-                  </a>
-                  <a
-                    href="/admin/doctorList"
+                  </button>
+                  <button
+                    onClick={() => navigate("/admin/doctorList")}
                     className="btn rounded-pill px-4 fw-medium"
                     style={{
                       border: "2px solid #48b575",
@@ -213,9 +218,9 @@ const AdminDashboard = () => {
                     }}
                   >
                     Manage Doctors
-                  </a>
-                  <a
-                    href="/admin/patientList"
+                  </button>
+                  <button
+                    onClick={() => navigate("/admin/patientList")}
                     className="btn rounded-pill px-4 fw-medium"
                     style={{
                       border: "2px solid #48b575",
@@ -225,8 +230,19 @@ const AdminDashboard = () => {
                     }}
                   >
                     Manage Patients
-                  </a>
-                  
+                  </button>
+                  <button
+                    onClick={handleViewAppointments}
+                    className="btn rounded-pill px-4 fw-medium"
+                    style={{
+                      border: "2px solid #48b575",
+                      color: "#48b575",
+                      backgroundColor: "transparent",
+                      padding: "10px 24px",
+                    }}
+                  >
+                    All Appointments
+                  </button>
                 </div>
               </Card.Body>
             </Card>

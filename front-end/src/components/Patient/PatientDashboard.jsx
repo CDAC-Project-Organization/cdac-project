@@ -777,7 +777,7 @@ const PatientDashboard = () => {
                             </div>
                             <div className="col-md-4 text-end">
                               <button
-                                className={`btn ${selectedDoctor?.doctorId === doctor.doctorId ? "btn-success" : "btn-primary"} rounded-pill px-4`}
+                                className={`btn ${selectedDoctor?.doctorId === doctor.doctorId ? "btn-success" : "btn-info"} rounded-pill px-4`}
                                 onClick={() => {
                                   if (
                                     selectedDoctor?.doctorId ===
@@ -919,21 +919,7 @@ const PatientDashboard = () => {
                     View and manage your appointments
                   </small>
                 </div>
-                <button
-                  className="btn btn-outline-primary"
-                  onClick={fetchPatientAppointments}
-                  disabled={loading.appointments}
-                >
-                  {loading.appointments ? (
-                    <span
-                      className="spinner-border spinner-border-sm me-1"
-                      role="status"
-                    ></span>
-                  ) : (
-                    <i className="bi bi-arrow-clockwise me-1"></i>
-                  )}
-                  Refresh
-                </button>
+                
               </div>
 
               {loading.appointments ? (
